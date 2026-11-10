@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/ai_speaking_service.dart';
 import '../../domain/entities/cue_card_entity.dart';
 import '../../domain/entities/mock_evaluation_entity.dart';
 import '../../domain/entities/question_entity.dart';
@@ -14,11 +15,13 @@ import '../models/mock_evaluation_model.dart';
 class SpeakingRepositoryImpl implements SpeakingRepository {
   final SpeakingLocalDataSource localDataSource;
   final SpeakingRemoteDataSource? remoteDataSource;
+  final AiSpeakingService aiService;
 
   SpeakingRepositoryImpl({
     required this.localDataSource,
     this.remoteDataSource,
-  });
+    AiSpeakingService? aiService,
+  }) : aiService = aiService ?? AiSpeakingService();
 
   @override
   Future<Either<Failure, List<TopicEntity>>> getPart1Topics() async {
@@ -169,9 +172,16 @@ class SpeakingRepositoryImpl implements SpeakingRepository {
   Future<Either<Failure, MockEvaluationEntity>> submitMockTestEvaluation({
     required String testTitle,
     required int durationSeconds,
+    String? audioPath,
+    String? promptContext,
   }) async {
     try {
-      final evaluation = _generateEvaluation(testTitle, durationSeconds);
+      final evaluation = await aiService.evaluateSpeakingResponse(
+        testTitle: testTitle,
+        durationSeconds: durationSeconds,
+        audioPath: audioPath,
+        promptContext: promptContext,
+      );
       final saved = await localDataSource.saveMockTestEvaluation(evaluation);
       return Right(saved);
     } catch (e) {

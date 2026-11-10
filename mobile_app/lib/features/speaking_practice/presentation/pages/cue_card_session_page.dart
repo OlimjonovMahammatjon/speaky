@@ -10,6 +10,7 @@ import '../widgets/audio_wave_visualizer.dart';
 import '../widgets/countdown_timer_widget.dart';
 import '../widgets/cue_card_box.dart';
 import '../widgets/criteria_score_card.dart';
+import '../widgets/recorded_audio_player_widget.dart';
 import 'part3_discussion_page.dart';
 
 class CueCardSessionPage extends StatefulWidget {
@@ -281,10 +282,13 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ESTIMATED BAND SCORE (PRACTICE MODE)',
+                        eval.isAiEvaluated
+                            ? 'OFFICIAL AI EXAMINER EVALUATION'
+                            : 'ESTIMATED BAND SCORE (PRACTICE MODE)',
                         style: AppTextStyles.label.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withValues(alpha: 0.85),
                           letterSpacing: 1.0,
+                          fontSize: 10.5,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -298,7 +302,11 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Very Good Speaker • Fluency Confirmed',
+                        eval.isAiEvaluated
+                            ? (eval.id.startsWith('groq_')
+                                ? '⚡ Groq Engine (Whisper V3 + LLaMA 3.3)'
+                                : '🧠 Google Gemini Multimodal AI Engine')
+                            : 'Good Stamina • Fluency Score Estimated',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 12,
@@ -319,7 +327,50 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+
+          // User Recorded Speech Player
+          if (state.recordedAudioPath != null && state.recordedAudioPath!.isNotEmpty) ...[
+            RecordedAudioPlayerWidget(
+              audioPath: state.recordedAudioPath!,
+              title: 'Listen to Your Speech',
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // AI Transcription if available
+          if (eval.transcription != null && eval.transcription!.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Speech Transcript (Recognized by AI)', style: AppTextStyles.titleMedium),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    eval.transcription!,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
 
           // 4 IELTS Criteria Breakdown
           Text('Criteria Breakdown', style: AppTextStyles.h3),

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../injection_container.dart';
+import '../../domain/usecases/get_questions_by_topic_usecase.dart';
 import '../bloc/speaking_bloc.dart';
 import 'cue_card_session_page.dart';
+import 'full_mock_simulation_page.dart';
 
 class MockTestIntroPage extends StatelessWidget {
   const MockTestIntroPage({super.key});
@@ -148,13 +151,34 @@ class MockTestIntroPage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      onPressed: () {
-                        if (state is SpeakingLoaded && state.cueCards.isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CueCardSessionPage(cueCard: state.cueCards.first),
-                            ),
+                      onPressed: () async {
+                        if (state is SpeakingLoaded && state.cueCards.isNotEmpty && state.allTopics.isNotEmpty) {
+                          final firstTopic = state.allTopics.first;
+                          final getQuestions = sl<GetQuestionsByTopicUseCase>();
+                          final res = await getQuestions(firstTopic.id);
+                          
+                          if (!context.mounted) return;
+                          
+                          res.fold(
+                            (failure) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CueCardSessionPage(cueCard: state.cueCards.first),
+                                ),
+                              );
+                            },
+                            (questions) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FullMockSimulationPage(
+                                    cueCard: state.cueCards.first,
+                                    part1Questions: questions,
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

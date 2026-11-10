@@ -76,10 +76,10 @@ export default function App() {
     return () => { if (typeof unsub === 'function') unsub(); };
   }, []);
 
-  // Auth guard: block CRUD operations if not signed in
-  const canEdit = isSupabaseConnected && currentUser !== null;
+  // Auth guard: allow local demo edits if offline, but if live Supabase is connected require login
+  const canEdit = !isSupabaseConnected || currentUser !== null;
 
-  // CRUD Handlers — only allow if authenticated
+  // CRUD Handlers
   const handleAddTopic = async (topic) => {
     if (!canEdit) { setShowAuth(true); return; }
     try {
@@ -88,6 +88,17 @@ export default function App() {
       showToast(`Topic "${created.title}" successfully added!`);
     } catch (e) {
       showToast('Failed to add topic: ' + e.message, 'error');
+    }
+  };
+
+  const handleUpdateTopic = async (id, updated) => {
+    if (!canEdit) { setShowAuth(true); return; }
+    try {
+      const res = await api.updateTopic(id, updated);
+      setTopics(prev => prev.map(t => t.id === id ? { ...t, ...res } : t));
+      showToast(`Topic updated successfully!`);
+    } catch (e) {
+      showToast('Failed to update topic: ' + e.message, 'error');
     }
   };
 
@@ -114,6 +125,17 @@ export default function App() {
     }
   };
 
+  const handleUpdateQuestion = async (id, updated) => {
+    if (!canEdit) { setShowAuth(true); return; }
+    try {
+      const res = await api.updateQuestion(id, updated);
+      setQuestions(prev => prev.map(q => q.id === id ? { ...q, ...res } : q));
+      showToast('Question updated successfully!');
+    } catch (e) {
+      showToast('Failed to update question: ' + e.message, 'error');
+    }
+  };
+
   const handleDeleteQuestion = async (id) => {
     if (!canEdit) { setShowAuth(true); return; }
     try {
@@ -136,6 +158,17 @@ export default function App() {
     }
   };
 
+  const handleUpdateCueCard = async (id, updated) => {
+    if (!canEdit) { setShowAuth(true); return; }
+    try {
+      const res = await api.updateCueCard(id, updated);
+      setCueCards(prev => prev.map(c => c.id === id ? { ...c, ...res } : c));
+      showToast('Cue card updated successfully!');
+    } catch (e) {
+      showToast('Failed to update cue card: ' + e.message, 'error');
+    }
+  };
+
   const handleDeleteCueCard = async (id) => {
     if (!canEdit) { setShowAuth(true); return; }
     try {
@@ -155,6 +188,17 @@ export default function App() {
       showToast(`Vocabulary item "${created.phrase}" added!`);
     } catch (e) {
       showToast('Failed to add vocabulary: ' + e.message, 'error');
+    }
+  };
+
+  const handleUpdateVocabulary = async (id, updated) => {
+    if (!canEdit) { setShowAuth(true); return; }
+    try {
+      const res = await api.updateVocabulary(id, updated);
+      setVocabulary(prev => prev.map(v => v.id === id ? { ...v, ...res } : v));
+      showToast('Vocabulary updated successfully!');
+    } catch (e) {
+      showToast('Failed to update vocabulary: ' + e.message, 'error');
     }
   };
 
@@ -271,8 +315,10 @@ export default function App() {
               topics={topics}
               questions={questions}
               onAddTopic={handleAddTopic}
+              onUpdateTopic={handleUpdateTopic}
               onDeleteTopic={handleDeleteTopic}
               onAddQuestion={handleAddQuestion}
+              onUpdateQuestion={handleUpdateQuestion}
               onDeleteQuestion={handleDeleteQuestion}
             />
           )}
@@ -281,6 +327,7 @@ export default function App() {
             <CueCardsView 
               cueCards={cueCards}
               onAddCueCard={handleAddCueCard}
+              onUpdateCueCard={handleUpdateCueCard}
               onDeleteCueCard={handleDeleteCueCard}
             />
           )}
@@ -289,6 +336,7 @@ export default function App() {
             <VocabularyView 
               vocabulary={vocabulary}
               onAddVocabulary={handleAddVocabulary}
+              onUpdateVocabulary={handleUpdateVocabulary}
               onDeleteVocabulary={handleDeleteVocabulary}
             />
           )}

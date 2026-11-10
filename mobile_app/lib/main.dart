@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'core/services/ai_speaking_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'injection_container.dart' as di;
@@ -33,6 +34,11 @@ void main() async {
 
   // Initialize Clean Architecture dependency injection
   await di.init();
+
+  // Sync remote AI keys and configurations if Supabase is connected
+  try {
+    await di.sl<AiSpeakingService>().syncRemoteSettings();
+  } catch (_) {}
 
   // Initialize local notifications
   await di.sl<NotificationService>().init();

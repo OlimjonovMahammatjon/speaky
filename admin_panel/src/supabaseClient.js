@@ -295,6 +295,19 @@ export const api = {
     return data;
   },
 
+  async updateTopic(id, updated) {
+    const client = getSupabase();
+    if (!client) {
+      const current = await api.getTopics();
+      const updatedList = current.map(t => t.id === id ? { ...t, ...updated } : t);
+      localStorage.setItem('ielts_local_topics', JSON.stringify(updatedList));
+      return { ...current.find(t => t.id === id), ...updated };
+    }
+    const { data, error } = await client.from('topics').update(updated).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   async deleteTopic(id) {
     const client = getSupabase();
     if (!client) {
@@ -337,6 +350,19 @@ export const api = {
       return newQ;
     }
     const { data, error } = await client.from('questions').insert([newQ]).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateQuestion(id, updated) {
+    const client = getSupabase();
+    if (!client) {
+      const current = await api.getQuestions();
+      const updatedList = current.map(q => q.id === id ? { ...q, ...updated } : q);
+      localStorage.setItem('ielts_local_questions', JSON.stringify(updatedList));
+      return { ...current.find(q => q.id === id), ...updated };
+    }
+    const { data, error } = await client.from('questions').update(updated).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },
@@ -384,6 +410,19 @@ export const api = {
     return data;
   },
 
+  async updateCueCard(id, updated) {
+    const client = getSupabase();
+    if (!client) {
+      const current = await api.getCueCards();
+      const updatedList = current.map(c => c.id === id ? { ...c, ...updated } : c);
+      localStorage.setItem('ielts_local_cue_cards', JSON.stringify(updatedList));
+      return { ...current.find(c => c.id === id), ...updated };
+    }
+    const { data, error } = await client.from('cue_cards').update(updated).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   async deleteCueCard(id) {
     const client = getSupabase();
     if (!client) {
@@ -427,6 +466,19 @@ export const api = {
     return data;
   },
 
+  async updateVocabulary(id, updated) {
+    const client = getSupabase();
+    if (!client) {
+      const current = await api.getVocabulary();
+      const updatedList = current.map(v => v.id === id ? { ...v, ...updated } : v);
+      localStorage.setItem('ielts_local_vocabulary', JSON.stringify(updatedList));
+      return { ...current.find(v => v.id === id), ...updated };
+    }
+    const { data, error } = await client.from('vocabulary').update(updated).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   async deleteVocabulary(id) {
     const client = getSupabase();
     if (!client) {
@@ -438,6 +490,62 @@ export const api = {
     const { error } = await client.from('vocabulary').delete().eq('id', id);
     if (error) throw error;
     return true;
+  },
+
+  // App Settings (AI API Keys & Configuration)
+  async getAppSettings() {
+    const client = getSupabase();
+    const localGemini = localStorage.getItem('ielts_gemini_api_key') || '';
+    const localGroq = localStorage.getItem('ielts_groq_api_key') || '';
+    const localMode = localStorage.getItem('ielts_ai_mode') || 'auto';
+
+    const defaultSettings = {
+      gemini_api_key: localGemini,
+      groq_api_key: localGroq,
+      active_ai_provider: localMode,
+    };
+
+    if (!client) return defaultSettings;
+
+    try {
+      const { data, error } = await client.from('app_settings').select('*');
+      if (error || !data) return defaultSettings;
+      const settings = { ...defaultSettings };
+      data.forEach(row => {
+        settings[row.key] = row.value;
+      });
+      return settings;
+    } catch (_) {
+      return defaultSettings;
+    }
+  },
+
+  async saveAppSettings(settings) {
+    if (settings.gemini_api_key !== undefined) {
+      localStorage.setItem('ielts_gemini_api_key', (settings.gemini_api_key || '').trim());
+    }
+    if (settings.groq_api_key !== undefined) {
+      localStorage.setItem('ielts_groq_api_key', (settings.groq_api_key || '').trim());
+    }
+    if (settings.active_ai_provider !== undefined) {
+      localStorage.setItem('ielts_ai_mode', settings.active_ai_provider || 'auto');
+    }
+
+    const client = getSupabase();
+    if (!client) return true;
+
+    try {
+      const rows = [
+        { key: 'gemini_api_key', value: (settings.gemini_api_key || '').trim(), updated_at: new Date().toISOString() },
+        { key: 'groq_api_key', value: (settings.groq_api_key || '').trim(), updated_at: new Date().toISOString() },
+        { key: 'active_ai_provider', value: settings.active_ai_provider || 'auto', updated_at: new Date().toISOString() },
+      ];
+      await client.from('app_settings').upsert(rows);
+      return true;
+    } catch (e) {
+      console.warn('Failed to save to Supabase app_settings table:', e);
+      return false;
+    }
   },
 
   // Seed sample data to Supabase

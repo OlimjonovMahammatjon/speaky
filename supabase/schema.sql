@@ -75,6 +75,14 @@ CREATE TABLE IF NOT EXISTS public.mock_evaluations (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::TEXT, now()) NOT NULL
 );
 
+-- 6. APP SETTINGS (AI API Keys & Global Config managed via Admin Panel)
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::TEXT, now()) NOT NULL
+);
+
 -- ==========================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================================
@@ -83,6 +91,7 @@ ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cue_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vocabulary ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mock_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 
 -- Public read access (anon key can read, for mobile app users)
 CREATE POLICY "Allow public read access on topics" ON public.topics FOR SELECT USING (true);
@@ -90,6 +99,7 @@ CREATE POLICY "Allow public read access on questions" ON public.questions FOR SE
 CREATE POLICY "Allow public read access on cue_cards" ON public.cue_cards FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on vocabulary" ON public.vocabulary FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on mock_evaluations" ON public.mock_evaluations FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on app_settings" ON public.app_settings FOR SELECT USING (true);
 
 -- Admin write access: only authenticated users (Supabase Auth)
 -- Requires admin to sign in via Supabase Auth before using the admin panel
@@ -102,6 +112,8 @@ CREATE POLICY "Admin write access on cue_cards" ON public.cue_cards FOR ALL
 CREATE POLICY "Admin write access on vocabulary" ON public.vocabulary FOR ALL
   TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Admin write access on mock_evaluations" ON public.mock_evaluations FOR ALL
+  TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin write access on app_settings" ON public.app_settings FOR ALL
   TO authenticated USING (true) WITH CHECK (true);
 
 -- NOTE: The old policies below used USING(true) WITH CHECK(true) for ALL users
@@ -135,3 +147,10 @@ VALUES
 ('v_2', 'Of paramount importance', '/ɒv ˈpær.ə.maʊnt ɪmˈpɔː.təns/', 'academicLexis', 'More important than anything else; supreme in significance.', 'Band 9.0', 'Safeguarding natural biospheres is of paramount importance for succeeding generations.', 'Environment'),
 ('v_3', 'Having said that', '/ˈhæv.ɪŋ sed ðæt/', 'discourseMarker', 'Used to introduce an opposing viewpoint or qualification; synonymous with nevertheless.', 'Band 8.0+', 'Urban living is bustling and full of career opportunities. Having said that, the stress levels can be quite detrimental.', 'Discourse Marker')
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.app_settings (key, value, description)
+VALUES 
+('gemini_api_key', '', 'Google Gemini API Key for Multimodal AI evaluation'),
+('groq_api_key', '', 'Groq API Key for Ultra-Fast Whisper STT & LLaMA 3.3 scoring'),
+('active_ai_provider', 'auto', 'AI Mode: auto, gemini, or groq')
+ON CONFLICT (key) DO NOTHING;

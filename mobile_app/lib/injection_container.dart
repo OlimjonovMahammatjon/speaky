@@ -3,8 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/network/supabase_config.dart';
+import 'core/services/ai_speaking_service.dart';
 import 'core/services/audio_recording_service.dart';
 import 'core/services/dictaphone_service.dart';
+import 'core/services/gemini_speaking_service.dart';
+import 'core/services/groq_speaking_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/speaking_practice/data/datasources/speaking_local_data_source.dart';
 import 'features/speaking_practice/data/datasources/speaking_remote_data_source.dart';
@@ -50,6 +53,21 @@ Future<void> init() async {
     () => NotificationService(),
   );
 
+  sl.registerLazySingleton<GeminiSpeakingService>(
+    () => GeminiSpeakingService(),
+  );
+
+  sl.registerLazySingleton<GroqSpeakingService>(
+    () => GroqSpeakingService(),
+  );
+
+  sl.registerLazySingleton<AiSpeakingService>(
+    () => AiSpeakingService(
+      geminiService: sl(),
+      groqService: sl(),
+    ),
+  );
+
   //! Features - Speaking Practice
   // Bloc
   sl.registerFactory(
@@ -80,6 +98,7 @@ Future<void> init() async {
     () => SpeakingRepositoryImpl(
       localDataSource: sl(),
       remoteDataSource: sl(),
+      aiService: sl(),
     ),
   );
 

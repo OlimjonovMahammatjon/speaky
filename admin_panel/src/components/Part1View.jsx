@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { 
   Plus, 
   Trash2, 
+  Pencil,
   MessageSquare, 
   HelpCircle, 
   CheckCircle, 
@@ -14,13 +15,17 @@ export default function Part1View({
   topics, 
   questions, 
   onAddTopic, 
+  onUpdateTopic,
   onDeleteTopic, 
   onAddQuestion, 
+  onUpdateQuestion,
   onDeleteQuestion 
 }) {
   const [selectedTopicId, setSelectedTopicId] = useState(topics.length > 0 ? topics[0].id : '');
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState(null);
+  const [editingQuestionId, setEditingQuestionId] = useState(null);
 
   // Topic Form state
   const [topicForm, setTopicForm] = useState({
@@ -45,11 +50,8 @@ export default function Part1View({
   const activeTopic = topics.find(t => t.id === selectedTopicId);
   const topicQuestions = questions.filter(q => q.topic_id === selectedTopicId);
 
-  const handleCreateTopic = (e) => {
-    e.preventDefault();
-    if (!topicForm.title) return;
-    onAddTopic(topicForm);
-    setShowTopicModal(false);
+  const openCreateTopicModal = () => {
+    setEditingTopicId(null);
     setTopicForm({
       title: '',
       description: '',
@@ -57,34 +59,35 @@ export default function Part1View({
       band_target: '8.0+',
       questions_count: 4,
     });
+    setShowTopicModal(true);
   };
 
-  const handleCreateQuestion = (e) => {
-    e.preventDefault();
-    if (!questionForm.question_text) return;
-
-    const ideasList = questionForm.ideas
-      ? questionForm.ideas.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
-    const vocabList = questionForm.high_band_vocabulary
-      ? questionForm.high_band_vocabulary.split(',').map(s => s.trim()).filter(Boolean)
-      : [];
-    const tipsList = questionForm.examiner_tips
-      ? questionForm.examiner_tips.split(',').map(s => s.trim()).filter(Boolean)
-      : [];
-
-    onAddQuestion({
-      topic_id: questionForm.topic_id || selectedTopicId,
-      question_text: questionForm.question_text,
-      short_sample_answer: questionForm.short_sample_answer,
-      ideas: ideasList,
-      sample_answer_band8: questionForm.sample_answer_band8,
-      high_band_vocabulary: vocabList,
-      examiner_tips: tipsList,
-      order_index: topicQuestions.length + 1,
+  const openEditTopicModal = (topic) => {
+    setEditingTopicId(topic.id);
+    setTopicForm({
+      title: topic.title,
+      description: topic.description,
+      category: topic.category,
+      band_target: topic.band_target,
+      questions_count: topic.questions_count,
     });
+    setShowTopicModal(true);
+  };
 
-    setShowQuestionModal(false);
+  const handleSaveTopic = (e) => {
+    e.preventDefault();
+    if (!topicForm.title) return;
+    if (editingTopicId && onUpdateTopic) {
+      onUpdateTopic(editingTopicId, topicForm);
+    } else {
+      onAddTopic(topicForm);
+    }
+    setShowTopicModal(false);
+    setEditingTopicId(null);
+  };
+
+  const openCreateQuestionModal = () => {
+    setEditingQuestionId(null);
     setQuestionForm({
       topic_id: selectedTopicId,
       question_text: '',
@@ -94,6 +97,56 @@ export default function Part1View({
       high_band_vocabulary: '',
       examiner_tips: '',
     });
+    setShowQuestionModal(true);
+  };
+
+  const openEditQuestionModal = (q) => {
+    setEditingQuestionId(q.id);
+    setQuestionForm({
+      topic_id: q.topic_id,
+      question_text: q.question_text || '',
+      short_sample_answer: q.short_sample_answer || '',
+      ideas: Array.isArray(q.ideas) ? q.ideas.join('\n') : (q.ideas || ''),
+      sample_answer_band8: q.sample_answer_band8 || '',
+      high_band_vocabulary: Array.isArray(q.high_band_vocabulary) ? q.high_band_vocabulary.join(', ') : (q.high_band_vocabulary || ''),
+      examiner_tips: Array.isArray(q.examiner_tips) ? q.examiner_tips.join(', ') : (q.examiner_tips || ''),
+    });
+    setShowQuestionModal(true);
+  };
+
+  const handleSaveQuestion = (e) => {
+    e.preventDefault();
+    if (!questionForm.question_text) return;
+
+    const ideasList = questionForm.ideas
+      ? (typeof questionForm.ideas === 'string' ? questionForm.ideas.split('\n').map(s => s.trim()).filter(Boolean) : questionForm.ideas)
+      : [];
+    const vocabList = questionForm.high_band_vocabulary
+      ? (typeof questionForm.high_band_vocabulary === 'string' ? questionForm.high_band_vocabulary.split(',').map(s => s.trim()).filter(Boolean) : questionForm.high_band_vocabulary)
+      : [];
+    const tipsList = questionForm.examiner_tips
+      ? (typeof questionForm.examiner_tips === 'string' ? questionForm.examiner_tips.split(',').map(s => s.trim()).filter(Boolean) : questionForm.examiner_tips)
+      : [];
+
+    const payload = {
+      topic_id: questionForm.topic_id || selectedTopicId,
+      question_text: questionForm.question_text,
+      short_sample_answer: questionForm.short_sample_answer,
+      ideas: ideasList,
+      sample_answer_band8: questionForm.sample_answer_band8,
+      high_band_vocabulary: vocabList,
+      examiner_tips: tipsList,
+      order_index: topicQuestions.length + 1,
+    };
+
+    if (editingQuestionId && onUpdateQuestion) {
+      onUpdateQuestion(editingQuestionId, payload);
+    } else {
+      onAddQuestion(payload);
+    }
+
+    setShowQuestionModal(false);
+    setEditingQuestionId(null);
   };
 
   return (
@@ -106,16 +159,13 @@ export default function Part1View({
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowTopicModal(true)}>
+          <button className="btn btn-secondary" onClick={openCreateTopicModal}>
             <Plus size={16} />
             <span>Create Topic</span>
           </button>
           <button 
             className="btn btn-primary" 
-            onClick={() => {
-              setQuestionForm(prev => ({ ...prev, topic_id: selectedTopicId }));
-              setShowQuestionModal(true);
-            }}
+            onClick={openCreateQuestionModal}
           >
             <Plus size={16} />
             <span>Add Question</span>
@@ -188,17 +238,28 @@ export default function Part1View({
                   <h3 style={{ fontSize: '20px' }}>{activeTopic.title}</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{activeTopic.description}</p>
                 </div>
-                <button 
-                  className="btn btn-danger btn-sm"
-                  onClick={() => {
-                    if (confirm(`Delete topic "${activeTopic.title}" and its questions?`)) {
-                      onDeleteTopic(activeTopic.id);
-                    }
-                  }}
-                >
-                  <Trash2 size={14} />
-                  <span>Delete Topic</span>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => openEditTopicModal(activeTopic)}
+                    title="Edit Topic"
+                  >
+                    <Pencil size={14} />
+                    <span>Edit</span>
+                  </button>
+                  <button 
+                    className="btn btn-danger btn-sm"
+                    onClick={() => {
+                      if (confirm(`Delete topic "${activeTopic.title}" and its questions?`)) {
+                        onDeleteTopic(activeTopic.id);
+                      }
+                    }}
+                    title="Delete Topic"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
 
               {/* Questions List */}
@@ -209,7 +270,7 @@ export default function Part1View({
                     <button 
                       className="btn btn-primary btn-sm" 
                       style={{ marginTop: '12px' }}
-                      onClick={() => setShowQuestionModal(true)}
+                      onClick={openCreateQuestionModal}
                     >
                       <Plus size={14} />
                       <span>Add First Question</span>
@@ -244,17 +305,29 @@ export default function Part1View({
                           </span>
                           <h4 style={{ fontSize: '16px' }}>{q.question_text}</h4>
                         </div>
-                        <button 
-                          className="btn btn-danger btn-sm"
-                          style={{ padding: '4px 8px' }}
-                          onClick={() => {
-                            if (confirm('Delete this question?')) {
-                              onDeleteQuestion(q.id);
-                            }
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button 
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            onClick={() => openEditQuestionModal(q)}
+                            title="Edit Question"
+                          >
+                            <Pencil size={13} />
+                            <span>Edit</span>
+                          </button>
+                          <button 
+                            className="btn btn-danger btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            onClick={() => {
+                              if (confirm('Delete this question?')) {
+                                onDeleteQuestion(q.id);
+                              }
+                            }}
+                            title="Delete Question"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Brainstorming Ideas */}
@@ -344,10 +417,10 @@ export default function Part1View({
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Create New IELTS Part 1 Topic</h3>
+              <h3>{editingTopicId ? 'Edit IELTS Topic' : 'Create New IELTS Part 1 Topic'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowTopicModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleCreateTopic}>
+            <form onSubmit={handleSaveTopic}>
               <div className="modal-body">
                 <div className="form-group">
                   <label>Topic Title</label>
@@ -402,7 +475,7 @@ export default function Part1View({
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowTopicModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Topic</button>
+                <button type="submit" className="btn btn-primary">{editingTopicId ? 'Save Changes' : 'Create Topic'}</button>
               </div>
             </form>
           </div>
@@ -414,10 +487,10 @@ export default function Part1View({
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Add Interview Question</h3>
+              <h3>{editingQuestionId ? 'Edit Interview Question' : 'Add Interview Question'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowQuestionModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleCreateQuestion}>
+            <form onSubmit={handleSaveQuestion}>
               <div className="modal-body">
                 <div className="form-group">
                   <label>Assign to Topic</label>
@@ -495,7 +568,7 @@ export default function Part1View({
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowQuestionModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Question</button>
+                <button type="submit" className="btn btn-primary">{editingQuestionId ? 'Save Changes' : 'Save Question'}</button>
               </div>
             </form>
           </div>

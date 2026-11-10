@@ -17,6 +17,8 @@ abstract class SpeakingRepository {
   Future<Either<Failure, MockEvaluationEntity>> submitMockTestEvaluation({
     required String testTitle,
     required int durationSeconds,
+    String? audioPath,
+    String? promptContext,
   });
   Future<Either<Failure, List<MockEvaluationEntity>>> getMockTestHistory();
 }

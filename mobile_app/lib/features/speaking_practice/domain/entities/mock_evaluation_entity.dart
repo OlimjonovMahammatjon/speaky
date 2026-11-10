@@ -11,6 +11,8 @@ class MockEvaluationEntity extends Equatable {
   final String feedbackSummary;
   final List<String> strengths;
   final List<String> areasToImprove;
+  final bool isAiEvaluated;
+  final String? transcription;
 
   const MockEvaluationEntity({
     required this.id,
@@ -23,6 +25,8 @@ class MockEvaluationEntity extends Equatable {
     required this.feedbackSummary,
     required this.strengths,
     required this.areasToImprove,
+    this.isAiEvaluated = false,
+    this.transcription,
   });
 
   @override
@@ -37,5 +41,7 @@ class MockEvaluationEntity extends Equatable {
         feedbackSummary,
         strengths,
         areasToImprove,
+        isAiEvaluated,
+        transcription,
       ];
 }

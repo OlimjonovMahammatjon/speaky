@@ -32,8 +32,9 @@ class AudioRecordingService {
   }
 
   /// Starts recording audio to a temporary file.
+  /// If [customFileName] is provided, uses it as the file prefix.
   /// Returns true on success, false if permission denied or hardware unavailable.
-  Future<bool> startRecording() async {
+  Future<bool> startRecording({String? customFileName}) async {
     if (_isRecording) return true;
 
     try {
@@ -42,8 +43,9 @@ class AudioRecordingService {
       if (!hasPermission) return false;
 
       final dir = await getTemporaryDirectory();
+      final prefix = customFileName ?? 'ielts_speaky';
       final path =
-          '${dir.path}/ielts_speaky_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${dir.path}/${prefix}_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       await recorder.start(
         const RecordConfig(

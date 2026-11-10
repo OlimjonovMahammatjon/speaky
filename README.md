@@ -1,6 +1,6 @@
 # 🎙️ IELTS SPEAKY • Ecosystem
 
-An all-in-one IELTS Speaking preparation platform featuring a Flutter mobile app built with **Clean Architecture** and a **React (Vite) Admin Studio** connected via **Supabase**.
+An all-in-one IELTS Speaking preparation platform featuring a Flutter mobile app built with **Clean Architecture** and a **React 19 (Vite) Admin Studio** powered by **Dual-Engine AI (Google Gemini + Groq Whisper Large V3 & LLaMA 3.3)** connected via **Supabase**.
 
 ---
 
@@ -8,25 +8,34 @@ An all-in-one IELTS Speaking preparation platform featuring a Flutter mobile app
 
 ```
 Speaking App/
-├── mobile_app/         # Flutter Mobile Application (Clean Architecture + BLoC + Supabase)
-├── admin_panel/        # React + Vite Admin Panel (Question & Cue Card Management)
-└── supabase/           # PostgreSQL Schema, RLS Policies & Seed Migrations
-    └── schema.sql
+├── mobile_app/         # Flutter Mobile Application (Clean Architecture + BLoC + Dual AI)
+├── admin_panel/        # React + Vite Admin Studio (CRUD + AI API Key Manager)
+├── supabase/           # PostgreSQL Schema, RLS Policies, app_settings & Seeds
+│   └── schema.sql
+├── PLAN.md             # Detailed Master Development Plan
+└── README.md
 ```
 
 ---
 
+## ⚡ Dual-Engine AI Architecture
+
+API kalitlar Admin Panelda kiritiladi va Supabase orqali mobil ilovaga avtomatik sinxronlanadi:
+1. **Google Gemini 1.5 & 2.0 Flash:** Native multimodal audio tahlili (intonatsiya, pauzalar, ravonlik).
+2. **Groq Cloud (Whisper Large V3 + LLaMA 3.3 70B):** Dunyodagi eng tezkor transkripsiya va sub-soniyalik tahlil.
+3. **⚡ Auto Dual-Race Mode:** Ikkala modelga parallel so'rov yuboriladi — qaysi biri birinchi javob qaytarsa o'sha ishlaydi! Biri to'xtab qolsa yoki rate limit bo'lsa, ikkinchisi 100% uzluksiz qutqaradi.
+
+---
+
 ## 📱 1. Mobile App (`mobile_app/`)
-Built with Flutter & Clean Architecture:
-- **Clean Architecture Layers**: `core/`, `domain/`, `data/`, `presentation/`
 - **State Management**: `flutter_bloc`
 - **Dependency Injection**: `get_it`
-- **Database / Cloud**: `supabase_flutter` with seamless offline cache fallback
+- **AI Speaking Orchestrator**: `AiSpeakingService` (Gemini + Groq race & fallback)
 - **Features**:
-  - Part 1: Interactive Interview Topics with Band 8.5 sample answers & examiner tips
-  - Part 2: Timed Candidate Task Cards (1-min prep + 2-min recording with live audio wave)
-  - Part 3 & Full Mock: Real-time exam simulation & 4 criteria scoring (FC, LR, GRA, PR)
-  - Band 8+ Lexical Bank: Collocations, Idioms & Discourse Markers
+  - **🤖 AI Speaking Partner**: Groq Whisper va Gemini orqali rasmiy 0.0 - 9.0 mezonlar bo'yicha baholash.
+  - **🎧 Audio Replay Player**: O'z ovozingizni qayta tinglash pleyeri va avtomatik transkript.
+  - **🏁 Full 3-Part Exam Simulation**: Rasmiy imtihon oqimi (Part 1 $\to$ Part 2 $\to$ Part 3 $\to$ Natija).
+  - **Part 1, Part 2 & Lexical Bank**: To'liq oflayn kesh va namunaviy javoblar.
 
 ### How to Run:
 ```bash
@@ -38,12 +47,9 @@ flutter run
 ---
 
 ## 💻 2. React Admin Studio (`admin_panel/`)
-Built with React 19, Vite, and Lucide Icons:
-- **Dashboard**: Live counts of topics, questions, cue cards, and vocabulary items
-- **Part 1 Manager**: Create and organize topics and interview questions
-- **Part 2 Manager**: Upload Candidate Task Cards with bullet points, Band 9 model answers, and Part 3 follow-ups
-- **Vocabulary Manager**: Add high-scoring idioms, collocations, and discourse markers
-- **Supabase Cloud Sync**: 1-click cloud synchronization and sample data seeder
+- **AI Keys Manager**: Google Gemini va Groq API kalitlarini kiritish va rejimni tanlash (Auto, Gemini, Groq).
+- **Full CRUD Management**: Part 1, Part 2 Cue Cards va Vocabulary bo'limlarida yaratish, **tahrirlash (Edit)** va o'chirish.
+- **Offline / Local Demo Support**: Supabase bo'lmasa ham to'liq ishlash imkoni.
 
 ### How to Run:
 ```bash
@@ -55,9 +61,5 @@ npm run dev
 ---
 
 ## 🗄️ 3. Supabase Setup (`supabase/schema.sql`)
-1. Create a project at [supabase.com](https://supabase.com).
-2. Go to the **SQL Editor** tab in your Supabase Dashboard.
-3. Paste the contents of `supabase/schema.sql` and run it.
-4. Add your **Project URL** and **Anon Key** in either:
-   - React Admin Panel (click "Connect Supabase" in the header)
-   - Flutter App (`mobile_app/lib/core/network/supabase_config.dart`)
+1. [supabase.com](https://supabase.com) loyihangiz SQL Editor qismida `supabase/schema.sql` faylini ishga tushiring.
+2. Admin Panelda "Connect Supabase" yoki "Settings" orqali Supabase URL & Anon Key kiritib, **Gemini va Groq kalitlarini** saqlang.

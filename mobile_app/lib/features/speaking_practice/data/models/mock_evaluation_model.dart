@@ -12,6 +12,8 @@ class MockEvaluationModel extends MockEvaluationEntity {
     required super.feedbackSummary,
     required super.strengths,
     required super.areasToImprove,
+    super.isAiEvaluated = false,
+    super.transcription,
   });
 
   factory MockEvaluationModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,8 @@ class MockEvaluationModel extends MockEvaluationEntity {
       feedbackSummary: json['feedbackSummary'] as String,
       strengths: List<String>.from(json['strengths'] as List),
       areasToImprove: List<String>.from(json['areasToImprove'] as List),
+      isAiEvaluated: json['isAiEvaluated'] as bool? ?? false,
+      transcription: json['transcription'] as String?,
     );
   }
 
@@ -41,6 +45,8 @@ class MockEvaluationModel extends MockEvaluationEntity {
       'feedbackSummary': feedbackSummary,
       'strengths': strengths,
       'areasToImprove': areasToImprove,
+      'isAiEvaluated': isAiEvaluated,
+      if (transcription != null) 'transcription': transcription,
     };
   }
 }

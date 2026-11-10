@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, FileText, CheckCircle2, Bookmark } from 'lucide-react';
+import { Plus, Trash2, Pencil, FileText, CheckCircle2, Bookmark } from 'lucide-react';
 
-export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }) {
+export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, onDeleteCueCard }) {
   const [showModal, setShowModal] = useState(false);
+  const [editingCueCardId, setEditingCueCardId] = useState(null);
   const [form, setForm] = useState({
     title: '',
     topic_area: '',
@@ -18,34 +19,8 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
     part3_follow_ups: '',
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.title || !form.cue_prompt) return;
-
-    const bullets = [form.bullet_1, form.bullet_2, form.bullet_3, form.bullet_4].filter(Boolean);
-    const storyIdeasList = form.story_ideas
-      ? form.story_ideas.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
-    const collocations = form.key_collocations
-      ? form.key_collocations.split(',').map(s => s.trim()).filter(Boolean)
-      : [];
-    const followUps = form.part3_follow_ups
-      ? form.part3_follow_ups.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
-
-    onAddCueCard({
-      title: form.title,
-      topic_area: form.topic_area || 'Life Experience',
-      cue_prompt: form.cue_prompt,
-      bullet_points: bullets,
-      story_ideas: storyIdeasList,
-      short_sample_answer: form.short_sample_answer,
-      band9_model_answer: form.band9_model_answer,
-      key_collocations: collocations,
-      part3_follow_ups: followUps,
-    });
-
-    setShowModal(false);
+  const openCreateModal = () => {
+    setEditingCueCardId(null);
     setForm({
       title: '',
       topic_area: '',
@@ -60,6 +35,64 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
       key_collocations: '',
       part3_follow_ups: '',
     });
+    setShowModal(true);
+  };
+
+  const openEditModal = (card) => {
+    setEditingCueCardId(card.id);
+    const bullets = card.bullet_points || [];
+    setForm({
+      title: card.title || '',
+      topic_area: card.topic_area || 'Life Experience',
+      cue_prompt: card.cue_prompt || '',
+      bullet_1: bullets[0] || '',
+      bullet_2: bullets[1] || '',
+      bullet_3: bullets[2] || '',
+      bullet_4: bullets[3] || '',
+      story_ideas: Array.isArray(card.story_ideas) ? card.story_ideas.join('\n') : (card.story_ideas || ''),
+      short_sample_answer: card.short_sample_answer || '',
+      band9_model_answer: card.band9_model_answer || '',
+      key_collocations: Array.isArray(card.key_collocations) ? card.key_collocations.join(', ') : (card.key_collocations || ''),
+      part3_follow_ups: Array.isArray(card.part3_follow_ups) ? card.part3_follow_ups.join('\n') : (card.part3_follow_ups || ''),
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.title || !form.cue_prompt) return;
+
+    const bullets = [form.bullet_1, form.bullet_2, form.bullet_3, form.bullet_4].filter(Boolean);
+    const storyIdeasList = form.story_ideas
+      ? (typeof form.story_ideas === 'string' ? form.story_ideas.split('\n').map(s => s.trim()).filter(Boolean) : form.story_ideas)
+      : [];
+    const collocations = form.key_collocations
+      ? (typeof form.key_collocations === 'string' ? form.key_collocations.split(',').map(s => s.trim()).filter(Boolean) : form.key_collocations)
+      : [];
+    const followUps = form.part3_follow_ups
+      ? (typeof form.part3_follow_ups === 'string' ? form.part3_follow_ups.split('\n').map(s => s.trim()).filter(Boolean) : form.part3_follow_ups)
+      : [];
+
+    const payload = {
+      title: form.title,
+      topic_area: form.topic_area || 'Life Experience',
+      cue_prompt: form.cue_prompt,
+      bullet_points: bullets,
+      story_ideas: storyIdeasList,
+      short_sample_answer: form.short_sample_answer,
+      band9_model_answer: form.band9_model_answer,
+      key_collocations: collocations,
+      part3_follow_ups: followUps,
+    };
+
+    if (editingCueCardId && onUpdateCueCard) {
+      onUpdateCueCard(editingCueCardId, payload);
+    } else {
+      onAddCueCard(payload);
+    }
+
+    setShowModal(false);
+    setEditingCueCardId(null);
   };
 
   return (
@@ -71,7 +104,7 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
             Configure 1-minute prep tasks with 4 bullet prompts, Band 9 transcripts, and Part 3 follow-up queries.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={openCreateModal}>
           <Plus size={16} />
           <span>New Cue Card</span>
         </button>
@@ -104,17 +137,28 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
                 <span className="badge badge-primary">{card.topic_area}</span>
                 <h3 style={{ fontSize: '17px', marginTop: '6px' }}>{card.title}</h3>
               </div>
-              <button 
-                className="btn btn-danger btn-sm"
-                style={{ padding: '6px' }}
-                onClick={() => {
-                  if (confirm(`Delete Cue Card "${card.title}"?`)) {
-                    onDeleteCueCard(card.id);
-                  }
-                }}
-              >
-                <Trash2 size={14} />
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '6px' }}
+                  onClick={() => openEditModal(card)}
+                  title="Edit Cue Card"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button 
+                  className="btn btn-danger btn-sm"
+                  style={{ padding: '6px' }}
+                  onClick={() => {
+                    if (confirm(`Delete Cue Card "${card.title}"?`)) {
+                      onDeleteCueCard(card.id);
+                    }
+                  }}
+                  title="Delete Cue Card"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
 
             {/* Cue Card Body */}
@@ -214,7 +258,7 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '720px' }}>
             <div className="modal-header">
-              <h3>Create IELTS Part 2 Task Card</h3>
+              <h3>{editingCueCardId ? 'Edit IELTS Part 2 Task Card' : 'Create IELTS Part 2 Task Card'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -346,7 +390,7 @@ export default function CueCardsView({ cueCards, onAddCueCard, onDeleteCueCard }
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Cue Card</button>
+                <button type="submit" className="btn btn-primary">{editingCueCardId ? 'Save Changes' : 'Save Cue Card'}</button>
               </div>
             </form>
           </div>

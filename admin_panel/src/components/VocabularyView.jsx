@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, Filter, Volume2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, Sparkles, Filter, Volume2 } from 'lucide-react';
 
-export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVocabulary }) {
+export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVocabulary, onDeleteVocabulary }) {
   const [filterType, setFilterType] = useState('All');
   const [showModal, setShowModal] = useState(false);
+  const [editingVocabId, setEditingVocabId] = useState(null);
   const [form, setForm] = useState({
     phrase: '',
     phonetics: '',
@@ -18,21 +19,8 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
     ? vocabulary 
     : vocabulary.filter(v => v.type?.toLowerCase() === filterType.toLowerCase());
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.phrase || !form.meaning) return;
-
-    onAddVocabulary({
-      phrase: form.phrase,
-      phonetics: form.phonetics,
-      type: form.type,
-      meaning: form.meaning,
-      band_target: form.band_target,
-      example_ielts_context: form.example_ielts_context,
-      topic_tag: form.topic_tag || 'General',
-    });
-
-    setShowModal(false);
+  const openCreateModal = () => {
+    setEditingVocabId(null);
     setForm({
       phrase: '',
       phonetics: '',
@@ -42,6 +30,45 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
       example_ielts_context: '',
       topic_tag: 'General',
     });
+    setShowModal(true);
+  };
+
+  const openEditModal = (item) => {
+    setEditingVocabId(item.id);
+    setForm({
+      phrase: item.phrase || '',
+      phonetics: item.phonetics || '',
+      type: item.type || 'collocation',
+      meaning: item.meaning || '',
+      band_target: item.band_target || 'Band 8.5+',
+      example_ielts_context: item.example_ielts_context || '',
+      topic_tag: item.topic_tag || 'General',
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.phrase || !form.meaning) return;
+
+    const payload = {
+      phrase: form.phrase,
+      phonetics: form.phonetics,
+      type: form.type,
+      meaning: form.meaning,
+      band_target: form.band_target,
+      example_ielts_context: form.example_ielts_context,
+      topic_tag: form.topic_tag || 'General',
+    };
+
+    if (editingVocabId && onUpdateVocabulary) {
+      onUpdateVocabulary(editingVocabId, payload);
+    } else {
+      onAddVocabulary(payload);
+    }
+
+    setShowModal(false);
+    setEditingVocabId(null);
   };
 
   const getTypeBadgeClass = (type) => {
@@ -62,7 +89,7 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
             Elevate candidates' Lexical Resource scores with high-impact collocations, phrasal verbs, and cohesive discourse markers.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={openCreateModal}>
           <Plus size={16} />
           <span>Add Lexical Item</span>
         </button>
@@ -127,17 +154,28 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button 
-                      className="btn btn-danger btn-sm"
-                      style={{ padding: '6px' }}
-                      onClick={() => {
-                        if (confirm(`Delete "${item.phrase}"?`)) {
-                          onDeleteVocabulary(item.id);
-                        }
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: 'inline-flex', gap: '6px' }}>
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '6px' }}
+                        onClick={() => openEditModal(item)}
+                        title="Edit Item"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button 
+                        className="btn btn-danger btn-sm"
+                        style={{ padding: '6px' }}
+                        onClick={() => {
+                          if (confirm(`Delete "${item.phrase}"?`)) {
+                            onDeleteVocabulary(item.id);
+                          }
+                        }}
+                        title="Delete Item"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -151,7 +189,7 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Add Band 8+ Vocabulary Item</h3>
+              <h3>{editingVocabId ? 'Edit Band 8+ Lexical Item' : 'Add Band 8+ Vocabulary Item'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -245,7 +283,7 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onDeleteVo
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Lexis</button>
+                <button type="submit" className="btn btn-primary">{editingVocabId ? 'Save Changes' : 'Save Lexis'}</button>
               </div>
             </form>
           </div>

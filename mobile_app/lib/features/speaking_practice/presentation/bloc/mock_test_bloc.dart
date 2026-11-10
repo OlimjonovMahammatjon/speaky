@@ -101,14 +101,16 @@ class MockTestAnalyzingState extends MockTestState {
 class MockTestResultState extends MockTestState {
   final CueCardEntity cueCard;
   final MockEvaluationEntity evaluation;
+  final String? recordedAudioPath;
 
   const MockTestResultState({
     required this.cueCard,
     required this.evaluation,
+    this.recordedAudioPath,
   });
 
   @override
-  List<Object?> get props => [cueCard, evaluation];
+  List<Object?> get props => [cueCard, evaluation, recordedAudioPath];
 }
 
 // BLOC
@@ -239,23 +241,25 @@ class MockTestBloc extends Bloc<MockTestEvent, MockTestState> {
   ) async {
     _timer?.cancel();
 
-    // Stop audio recording if active
+    // Stop audio recording if active and capture recorded file path
+    String? recordedPath;
     try {
       if (audioService.isRecording) {
-        await audioService.stopRecording();
+        recordedPath = await audioService.stopRecording();
+      } else {
+        recordedPath = audioService.currentPath;
       }
     } catch (_) {}
 
     emit(const MockTestAnalyzingState(
-      'Analyzing your speaking duration and generating an estimated band score...'
+      'AI Examiner is evaluating your speech across Fluency, Vocabulary, Grammar & Pronunciation...'
     ));
-
-    // Realistic delay for evaluation computation
-    await Future.delayed(const Duration(milliseconds: 1400));
 
     final result = await repository.submitMockTestEvaluation(
       testTitle: _currentCueCard?.title ?? 'IELTS Cue Card',
       durationSeconds: event.durationSpokenSeconds,
+      audioPath: recordedPath,
+      promptContext: _currentCueCard?.cuePrompt,
     );
 
     result.fold(
@@ -264,6 +268,7 @@ class MockTestBloc extends Bloc<MockTestEvent, MockTestState> {
         emit(MockTestResultState(
           cueCard: _currentCueCard!,
           evaluation: evaluation,
+          recordedAudioPath: recordedPath,
         ));
       },
     );
