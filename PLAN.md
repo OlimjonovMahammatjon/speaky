@@ -69,3 +69,28 @@ Ushbu hujjat **IELTS Speaky** loyihasini to'liq professional, Dual-Engine AI (Go
 - [x] `RecordedAudioPlayerWidget` yaratildi va Part 2 hamda Full Mock ekranlariga ulandi.
 - [x] `FullMockSimulationPage` (Part 1 $\to$ Part 2 $\to$ Part 3 $\to$ Official Report) yaratildi.
 - [x] Testlar va hujjatlar 100% yangilandi.
+
+### ✅ BOSQICH 5: Dual-Mode Audio Recording (Uzluksiz Butun Imtihon + Har Bir Savol Uchun Alohida)
+- [x] **Butun Speaking jarayonini uzluksiz yozib olish (Continuous Full Exam Recording):**
+  - Full Mock boshlanishida kandidat toggle orqali yoqishi mumkin.
+  - Imtihon davomida (Part 1, Part 2 va Part 3) butun jarayon bitta audio faylga yozib olinadi.
+  - Imtihon yakunida `RecordedAudioPlayerWidget` orqali to'liq audio eshitish uchun taqdim etiladi.
+- [x] **Har bir savol uchun alohida audio yozib olish (Per-Question Audio Recording):**
+  - `QuestionAudioRecorderWidget` yaratildi (jonli vaqt taymeri, mikrofon to'lqini, to'xtatish, qayta eshitish va re-record imkoniyatlari bilan).
+  - `FullMockSimulationPage` dagi Part 1 va Part 3 savollariga ulandi.
+  - `Part1TopicsPage` dagi mavzu ichidagi har bir savolga ulandi.
+  - `Part3DiscussionPage` dagi har bir chuqurlashtirilgan savolga ulandi.
+  - Imtihon natijalari ekranida yozib olingan barcha alohida audio fayllar ro'yxat shaklida ko'rsatiladi.
+
+### ✅ BOSQICH 6: Intuitive & User-Friendly UX/UI (Foydalanuvchi uchun juda qulay interfeys)
+- [x] **Top Step Progress Stepper:**
+  - Imtihon davomida ekranning yuqori qismida zamonaviy vizual qadamlar ko'rsatkichi (`Part 1` ── `Part 2` ── `Part 3` ── `Natija`).
+  - Har bir bosqichning holati (faol, yakunlangan va kelgusi) ranglar va belgilar bilan ko'rsatiladi.
+- [x] **Interaktiv & qulay audio yozuvchi vidjeti:**
+  - Pulsatsiyalanuvchi qizil animatsion indikator va real vaqtli audio to'lqin vizualizatori.
+  - Yozish vaqtida bekor qilish ("Bekor qilish") va saqlash ("Tugatish & Saqlash") tugmalari.
+  - Yozilgan audioni in-place tinglash, oldinga/orqaga surish (scrubber) va qaytadan yozish imkoniyati.
+- [x] **Matn va ekran sig'imi (Overflow himoyasi):**
+  - Uzun savol va sarlavhalar matni barcha telefon ekranlariga moslashib, hech qachon ekrandan chiqib ketmaydi (`Expanded` va `TextOverflow.ellipsis`).
+- [x] **Qulay yakuniy boshqaruv:**
+  - Natijalar ekranida imtihonni darhol qaytadan topshirish ("Qayta topshirish") va bosh sahifaga qaytish tugmalari.

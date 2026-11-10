@@ -155,7 +155,7 @@ class MockTestIntroPage extends StatelessWidget {
                         if (state is SpeakingLoaded && state.cueCards.isNotEmpty && state.allTopics.isNotEmpty) {
                           final firstTopic = state.allTopics.first;
                           final getQuestions = sl<GetQuestionsByTopicUseCase>();
-                          final res = await getQuestions(firstTopic.id);
+                          final res = await getQuestions(GetQuestionsByTopicParams(topicId: firstTopic.id));
                           
                           if (!context.mounted) return;
                           

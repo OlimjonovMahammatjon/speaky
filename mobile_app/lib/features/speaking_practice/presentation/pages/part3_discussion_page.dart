@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/cue_card_entity.dart';
+import '../widgets/question_audio_recorder_widget.dart';
 
 class Part3DiscussionPage extends StatefulWidget {
   final CueCardEntity cueCard;
@@ -352,6 +353,14 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 14),
+
+            // Per-Question Audio Recorder
+            QuestionAudioRecorderWidget(
+              key: ValueKey('part3_q_$index'),
+              questionId: 'part3_q_$index',
+              label: 'Muhokama savoliga javob yozish (Q${index + 1})',
             ),
             const SizedBox(height: 14),
 

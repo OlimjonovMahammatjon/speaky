@@ -8,6 +8,7 @@ import '../../domain/usecases/get_questions_by_topic_usecase.dart';
 import '../../../../injection_container.dart';
 import '../bloc/speaking_bloc.dart';
 import '../widgets/band_score_badge.dart';
+import '../widgets/question_audio_recorder_widget.dart';
 
 class Part1TopicsPage extends StatefulWidget {
   const Part1TopicsPage({super.key});
@@ -614,6 +615,15 @@ class _TopicQuestionsSheetContentState extends State<_TopicQuestionsSheetContent
                       ),
 
                     const SizedBox(height: 12),
+
+                    // Practice Voice Recording for this specific question
+                    QuestionAudioRecorderWidget(
+                      key: ValueKey('topic_q_${q.id}'),
+                      questionId: 'topic_${q.id}',
+                      label: 'Javobingizni ovozda yozib oling (Q${index + 1})',
+                    ),
+
+                    const SizedBox(height: 14),
 
                     // Toggle Sample Answer
                     Row(

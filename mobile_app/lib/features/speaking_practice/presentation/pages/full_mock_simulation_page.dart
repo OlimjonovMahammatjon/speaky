@@ -79,12 +79,36 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
     _audioService.reset();
     super.dispose();
   }
-    _timer?.cancel();
-    _audioService.reset();
-    super.dispose();
+
+  Future<void> _startContinuousRecording() async {
+    try {
+      if (await _continuousRecorder!.hasPermission()) {
+        final dir = await getTemporaryDirectory();
+        final path = '${dir.path}/full_exam_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _continuousRecorder!.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 44100, bitRate: 128000),
+          path: path,
+        );
+        _fullExamContinuousAudioPath = path;
+      }
+    } catch (_) {}
   }
 
-  void _startPart1() {
+  Future<void> _stopContinuousRecording() async {
+    try {
+      if (await _continuousRecorder!.isRecording()) {
+        final path = await _continuousRecorder!.stop();
+        if (path != null) {
+          _fullExamContinuousAudioPath = path;
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _startPart1() async {
+    if (_continuousRecordingEnabled) {
+      await _startContinuousRecording();
+    }
     setState(() {
       _currentPhase = FullMockPhase.part1;
       _part1CurrentIndex = 0;
@@ -180,11 +204,23 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
       _currentPhase = FullMockPhase.evaluating;
     });
 
+    // Stop continuous exam recording if running
+    if (_continuousRecordingEnabled) {
+      await _stopContinuousRecording();
+    }
+
     final totalSeconds = _totalSpokenSeconds > 0 ? _totalSpokenSeconds : 90;
+    
+    // Choose the best audio path for evaluation:
+    // Prioritize Part 2 speech recording, or continuous full exam recording
+    final evaluationAudioPath = (_recordedAudioPath != null && _recordedAudioPath!.isNotEmpty)
+        ? _recordedAudioPath
+        : _fullExamContinuousAudioPath;
+
     final result = await _repository.submitMockTestEvaluation(
       testTitle: 'Full Mock: ${widget.cueCard.title}',
       durationSeconds: totalSeconds,
-      audioPath: _recordedAudioPath,
+      audioPath: evaluationAudioPath,
       promptContext: widget.cueCard.cuePrompt,
     );
 
@@ -243,7 +279,99 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
         ),
       ),
       body: SafeArea(
-        child: _buildPhaseContent(),
+        child: Column(
+          children: [
+            _buildTopProgressStepper(),
+            Expanded(child: _buildPhaseContent()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopProgressStepper() {
+    if (_currentPhase == FullMockPhase.intro || _currentPhase == FullMockPhase.evaluating) {
+      return const SizedBox.shrink();
+    }
+
+    int activeIndex = 0;
+    if (_currentPhase == FullMockPhase.part1) activeIndex = 0;
+    else if (_currentPhase == FullMockPhase.part2Prep || _currentPhase == FullMockPhase.part2Speaking) activeIndex = 1;
+    else if (_currentPhase == FullMockPhase.part3) activeIndex = 2;
+    else if (_currentPhase == FullMockPhase.results) activeIndex = 3;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: AppColors.surfaceBorderLight, width: 1.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          _buildStepNode(0, 'Part 1', activeIndex),
+          _buildStepLine(activeIndex > 0),
+          _buildStepNode(1, 'Part 2', activeIndex),
+          _buildStepLine(activeIndex > 1),
+          _buildStepNode(2, 'Part 3', activeIndex),
+          _buildStepLine(activeIndex > 2),
+          _buildStepNode(3, 'Natija', activeIndex),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepNode(int index, String label, int activeIndex) {
+    final bool isCompleted = index < activeIndex;
+    final bool isCurrent = index == activeIndex;
+
+    Color bg;
+    Widget iconOrText;
+
+    if (isCompleted) {
+      bg = AppColors.teal;
+      iconOrText = const Icon(Icons.check, size: 14, color: Colors.white);
+    } else if (isCurrent) {
+      bg = AppColors.primary;
+      iconOrText = Text('${index + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11));
+    } else {
+      bg = AppColors.surfaceBorder;
+      iconOrText = Text('${index + 1}', style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 11));
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: bg,
+            shape: BoxShape.circle,
+          ),
+          child: Center(child: iconOrText),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            color: isCurrent ? AppColors.primaryDark : (isCompleted ? AppColors.teal : AppColors.textMuted),
+            fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
+            fontSize: 11.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepLine(bool isCompleted) {
+    return Expanded(
+      child: Container(
+        height: 2.5,
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        color: isCompleted ? AppColors.teal : AppColors.surfaceBorderLight,
       ),
     );
   }
@@ -333,7 +461,53 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           _buildSummaryTile('Part 2', widget.cueCard.title, Icons.timer_outlined, AppColors.primary),
           const SizedBox(height: 10),
           _buildSummaryTile('Part 3', '${widget.cueCard.part3FollowUps.length} In-depth societal discussion questions', Icons.forum_outlined, AppColors.orange),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+
+          // Continuous Full-Session Recording Toggle
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primarySoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.mic_external_on_rounded, color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Record Entire Speaking Session', style: AppTextStyles.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Continuous full exam master track (Parts 1-3). You can also record individual questions.',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _continuousRecordingEnabled,
+                  activeColor: AppColors.primary,
+                  onChanged: (val) {
+                    setState(() {
+                      _continuousRecordingEnabled = val;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -409,50 +583,77 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primarySoft,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
+          const SizedBox(height: 14),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        q.question_text,
-                        style: AppTextStyles.h2.copyWith(fontSize: 19),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primarySoft,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                q.question_text,
+                                style: AppTextStyles.h2.copyWith(fontSize: 19),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (q.ideas.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 10),
+                          Text('💡 Examiner Tip / Key Angle:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
+                          const SizedBox(height: 6),
+                          Text(q.ideas.first, style: AppTextStyles.bodyMedium),
+                        ],
+                      ],
                     ),
-                  ],
-                ),
-                if (q.ideas.isNotEmpty) ...[
+                  ),
                   const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  Text('💡 Examiner Tip / Key Angle:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
-                  const SizedBox(height: 6),
-                  Text(q.ideas.first, style: AppTextStyles.bodyMedium),
+                  QuestionAudioRecorderWidget(
+                    key: ValueKey('p1_rec_${q.id}_$_part1CurrentIndex'),
+                    questionId: 'part1_${q.id}',
+                    initialAudioPath: _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}'],
+                    label: 'Record Answer to Question ${_part1CurrentIndex + 1}',
+                    onRecordingCompleted: (path) {
+                      setState(() {
+                        _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}'] = path;
+                      });
+                    },
+                    onRecordingDeleted: () {
+                      setState(() {
+                        _perQuestionAudioMap.remove('Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}');
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
                 ],
-              ],
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -570,48 +771,75 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.orangeSoft,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.forum_outlined, color: AppColors.orange, size: 20),
+          const SizedBox(height: 14),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        currentQ,
-                        style: AppTextStyles.h2.copyWith(fontSize: 18),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: AppColors.orangeSoft,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.forum_outlined, color: AppColors.orange, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                currentQ,
+                                style: AppTextStyles.h2.copyWith(fontSize: 18),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        Text('Examiner Focus:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
+                        const SizedBox(height: 4),
+                        Text('Express balanced viewpoints, use speculative conditionals (e.g. "If governments were to..."), and avoid one-word answers.', style: AppTextStyles.bodyMedium),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 10),
-                Text('Examiner Focus:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
-                const SizedBox(height: 4),
-                Text('Express balanced viewpoints, use speculative conditionals (e.g. "If governments were to..."), and avoid one-word answers.', style: AppTextStyles.bodyMedium),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+                  QuestionAudioRecorderWidget(
+                    key: ValueKey('p3_rec_${_part3CurrentIndex}'),
+                    questionId: 'part3_${_part3CurrentIndex}',
+                    initialAudioPath: _perQuestionAudioMap['Part 3 (Q${_part3CurrentIndex + 1}): $currentQ'],
+                    label: 'Record Answer to Discussion Question ${_part3CurrentIndex + 1}',
+                    onRecordingCompleted: (path) {
+                      setState(() {
+                        _perQuestionAudioMap['Part 3 (Q${_part3CurrentIndex + 1}): $currentQ'] = path;
+                      });
+                    },
+                    onRecordingDeleted: () {
+                      setState(() {
+                        _perQuestionAudioMap.remove('Part 3 (Q${_part3CurrentIndex + 1}): $currentQ');
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -716,11 +944,55 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           ),
           const SizedBox(height: 20),
 
-          // Audio Player if recording exists
-          if (_recordedAudioPath != null && _recordedAudioPath!.isNotEmpty) ...[
+          // Full Continuous Exam Audio Player if present
+          if (_fullExamContinuousAudioPath != null && _fullExamContinuousAudioPath!.isNotEmpty && File(_fullExamContinuousAudioPath!).existsSync()) ...[
+            RecordedAudioPlayerWidget(
+              audioPath: _fullExamContinuousAudioPath!,
+              title: 'Full Continuous Exam Session Recording (Parts 1-3)',
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Part 2 Audio Player if present
+          if (_recordedAudioPath != null && _recordedAudioPath!.isNotEmpty && File(_recordedAudioPath!).existsSync()) ...[
             RecordedAudioPlayerWidget(
               audioPath: _recordedAudioPath!,
-              title: 'Listen to Part 2 Speech',
+              title: 'Part 2 Cue Card Speech Recording',
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Per-Question Practice Audio Recordings
+          if (_perQuestionAudioMap.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.playlist_play_rounded, color: AppColors.primary, size: 22),
+                      const SizedBox(width: 8),
+                      Text('Per-Question Audio Recordings (${_perQuestionAudioMap.length})', style: AppTextStyles.titleMedium),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ..._perQuestionAudioMap.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: RecordedAudioPlayerWidget(
+                        audioPath: entry.value,
+                        title: entry.key,
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
           ],
@@ -805,19 +1077,49 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           ),
           const SizedBox(height: 28),
 
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Qayta topshirish'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _currentPhase = FullMockPhase.intro;
+                      _part1CurrentIndex = 0;
+                      _part3CurrentIndex = 0;
+                      _totalSpokenSeconds = 0;
+                      _recordedAudioPath = null;
+                      _fullExamContinuousAudioPath = null;
+                      _perQuestionAudioMap.clear();
+                      _finalEvaluation = null;
+                    });
+                  },
+                ),
               ),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Back to Home Dashboard'),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.home_rounded, size: 18, color: Colors.white),
+                  label: const Text('Bosh sahifa'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );

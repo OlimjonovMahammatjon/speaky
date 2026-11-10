@@ -156,28 +156,32 @@ class _RecordedAudioPlayerWidgetState extends State<RecordedAudioPlayerWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.headphones_rounded, color: AppColors.primary, size: 17),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(widget.title, style: AppTextStyles.titleMedium),
-                ],
+              Container(
+                width: 34,
+                height: 34,
+                decoration: const BoxDecoration(
+                  color: AppColors.primarySoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.headphones_rounded, color: AppColors.primary, size: 18),
               ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: AppTextStyles.titleMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
                 '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
                 style: AppTextStyles.label.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 12,
+                  fontSize: 11.5,
                 ),
               ),
             ],
