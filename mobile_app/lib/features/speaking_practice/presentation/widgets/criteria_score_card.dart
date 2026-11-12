@@ -17,17 +17,17 @@ class CriteriaScoreCard extends StatelessWidget {
   });
 
   Color _getScoreColor(double score) {
-    if (score >= 8.0) return AppColors.teal;
-    if (score >= 7.0) return AppColors.primary;
-    if (score >= 6.0) return AppColors.orange;
-    return AppColors.band5;
+    if (score >= 8.0) return AppColors.secondary;
+    if (score >= 6.5) return AppColors.primary;
+    if (score >= 5.5) return AppColors.warning;
+    return AppColors.rose;
   }
 
   Color _getScoreBgColor(double score) {
-    if (score >= 8.0) return AppColors.tealSoft;
-    if (score >= 7.0) return AppColors.primarySoft;
-    if (score >= 6.0) return AppColors.orangeSoft;
-    return const Color(0xFFFEF2F2);
+    if (score >= 8.0) return AppColors.secondarySoft;
+    if (score >= 6.5) return AppColors.primarySoft;
+    if (score >= 5.5) return AppColors.warningSoft;
+    return AppColors.roseSoft;
   }
 
   @override

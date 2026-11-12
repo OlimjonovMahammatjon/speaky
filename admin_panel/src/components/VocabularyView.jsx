@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Pencil, Sparkles, Filter, Volume2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 
-export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVocabulary, onDeleteVocabulary }) {
+export default function VocabularyView({
+  vocabulary,
+  onAddVocabulary,
+  onUpdateVocabulary,
+  onDeleteVocabulary,
+  quickAction,
+  onQuickActionHandled,
+  showToast,
+}) {
   const [filterType, setFilterType] = useState('All');
   const [showModal, setShowModal] = useState(false);
   const [editingVocabId, setEditingVocabId] = useState(null);
@@ -19,7 +27,7 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVo
     ? vocabulary 
     : vocabulary.filter(v => v.type?.toLowerCase() === filterType.toLowerCase());
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
     setEditingVocabId(null);
     setForm({
       phrase: '',
@@ -31,7 +39,14 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVo
       topic_tag: 'General',
     });
     setShowModal(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (quickAction?.type === 'vocabulary') {
+      openCreateModal();
+      onQuickActionHandled?.();
+    }
+  }, [quickAction, openCreateModal, onQuickActionHandled]);
 
   const openEditModal = (item) => {
     setEditingVocabId(item.id);
@@ -47,24 +62,31 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVo
     setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.phrase || !form.meaning) return;
+    const phrase = (form.phrase || '').trim();
+    const meaning = (form.meaning || '').trim();
+    if (!phrase || !meaning) {
+      showToast?.('Phrase and meaning are required.', 'error');
+      return;
+    }
 
     const payload = {
-      phrase: form.phrase,
-      phonetics: form.phonetics,
+      phrase,
+      phonetics: (form.phonetics || '').trim(),
       type: form.type,
-      meaning: form.meaning,
+      meaning,
       band_target: form.band_target,
-      example_ielts_context: form.example_ielts_context,
-      topic_tag: form.topic_tag || 'General',
+      example_ielts_context: (form.example_ielts_context || '').trim(),
+      topic_tag: (form.topic_tag || '').trim() || 'General',
     };
 
     if (editingVocabId && onUpdateVocabulary) {
-      onUpdateVocabulary(editingVocabId, payload);
-    } else {
-      onAddVocabulary(payload);
+      const updated = await onUpdateVocabulary(editingVocabId, payload);
+      if (!updated) return;
+    } else if (onAddVocabulary) {
+      const created = await onAddVocabulary(payload);
+      if (!created) return;
     }
 
     setShowModal(false);
@@ -75,8 +97,8 @@ export default function VocabularyView({ vocabulary, onAddVocabulary, onUpdateVo
     switch (type?.toLowerCase()) {
       case 'collocation': return 'badge-primary';
       case 'idiom': return 'badge-cyan';
-      case 'discoursemarker': return 'badge-amber';
-      default: return 'badge-emerald';
+      case 'discoursemarker': return 'badge-cyan';
+      default: return 'badge-primary';
     }
   };
 

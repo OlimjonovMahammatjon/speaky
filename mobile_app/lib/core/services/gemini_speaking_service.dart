@@ -12,6 +12,34 @@ import '../../features/speaking_practice/data/models/mock_evaluation_model.dart'
 /// - Speech transcription and actionable examiner feedback
 /// - Seamless fallback to offline heuristic scoring if offline or API key omitted
 class GeminiSpeakingService {
+  static const String systemInstruction = '''
+You are an expert, certified IELTS Speaking Examiner.
+Listen carefully to the candidate's audio response (or read the context if audio is omitted) and evaluate it according to the official IELTS Speaking Band Descriptors across 4 criteria:
+1. Fluency and Coherence (FC)
+2. Lexical Resource (LR)
+3. Grammatical Range and Accuracy (GRA)
+4. Pronunciation (PR)
+
+Rules:
+- Assign scores strictly from 4.0 to 9.0 in half-band increments (e.g. 6.0, 6.5, 7.0, 7.5, 8.0).
+- Overall Band is the arithmetic mean of the 4 criteria rounded to the nearest 0.5.
+- Transcribe the candidate's speech accurately in "transcription" (or empty string if no audio).
+- Provide constructive, IELTS-specific strengths and areas to improve.
+
+Respond strictly with valid JSON conforming to:
+{
+  "overallBand": 7.5,
+  "fluencyBand": 7.5,
+  "lexicalBand": 7.0,
+  "grammarBand": 7.5,
+  "pronunciationBand": 8.0,
+  "transcription": "Accurate word-for-word speech transcript.",
+  "feedbackSummary": "2-3 concise sentences analyzing candidate performance.",
+  "strengths": ["Specific strength 1", "Specific strength 2"],
+  "areasToImprove": ["Specific actionable tip 1", "Specific actionable tip 2"]
+}
+''';
+
   final Dio _dio;
 
   GeminiSpeakingService({Dio? dio}) : _dio = dio ?? Dio(

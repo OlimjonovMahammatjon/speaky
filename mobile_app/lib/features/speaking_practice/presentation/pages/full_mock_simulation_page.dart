@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/services/audio_recording_service.dart';
@@ -10,10 +9,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/cue_card_entity.dart';
 import '../../domain/entities/question_entity.dart';
-import '../../domain/entities/topic_entity.dart';
 import '../../domain/entities/mock_evaluation_entity.dart';
 import '../../domain/repositories/speaking_repository.dart';
-import '../bloc/speaking_bloc.dart';
 import '../widgets/audio_wave_visualizer.dart';
 import '../widgets/countdown_timer_widget.dart';
 import '../widgets/cue_card_box.dart';
@@ -295,10 +292,15 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
     }
 
     int activeIndex = 0;
-    if (_currentPhase == FullMockPhase.part1) activeIndex = 0;
-    else if (_currentPhase == FullMockPhase.part2Prep || _currentPhase == FullMockPhase.part2Speaking) activeIndex = 1;
-    else if (_currentPhase == FullMockPhase.part3) activeIndex = 2;
-    else if (_currentPhase == FullMockPhase.results) activeIndex = 3;
+    if (_currentPhase == FullMockPhase.part1) {
+      activeIndex = 0;
+    } else if (_currentPhase == FullMockPhase.part2Prep || _currentPhase == FullMockPhase.part2Speaking) {
+      activeIndex = 1;
+    } else if (_currentPhase == FullMockPhase.part3) {
+      activeIndex = 2;
+    } else if (_currentPhase == FullMockPhase.results) {
+      activeIndex = 3;
+    }
 
     return Container(
       width: double.infinity,
@@ -454,13 +456,13 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
             ),
           ),
           const SizedBox(height: 24),
-          Text('Your Exam Package Today:', style: AppTextStyles.h3),
+          Text('Exam Structure', style: AppTextStyles.h3),
           const SizedBox(height: 12),
-          _buildSummaryTile('Part 1', '${widget.part1Questions.length} Interview questions on everyday topics', Icons.chat_bubble_outline, AppColors.teal),
+          _buildSummaryTile('1', 'Part 1 • Introduction', '${widget.part1Questions.length} everyday interview questions'),
           const SizedBox(height: 10),
-          _buildSummaryTile('Part 2', widget.cueCard.title, Icons.timer_outlined, AppColors.primary),
+          _buildSummaryTile('2', 'Part 2 • Long Turn', widget.cueCard.title),
           const SizedBox(height: 10),
-          _buildSummaryTile('Part 3', '${widget.cueCard.part3FollowUps.length} In-depth societal discussion questions', Icons.forum_outlined, AppColors.orange),
+          _buildSummaryTile('3', 'Part 3 • Discussion', '${widget.cueCard.part3FollowUps.length} analytical follow-up questions'),
           const SizedBox(height: 16),
 
           // Continuous Full-Session Recording Toggle
@@ -469,19 +471,10 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+              border: Border.all(color: AppColors.surfaceBorder, width: 1),
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primarySoft,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.mic_external_on_rounded, color: AppColors.primary, size: 22),
-                ),
-                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,15 +482,16 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
                       Text('Record Entire Speaking Session', style: AppTextStyles.titleMedium),
                       const SizedBox(height: 2),
                       Text(
-                        'Continuous full exam master track (Parts 1-3). You can also record individual questions.',
+                        'Continuous master track across Parts 1–3, alongside per-question recordings.',
                         style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
                 Switch.adaptive(
                   value: _continuousRecordingEnabled,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) {
                     setState(() {
                       _continuousRecordingEnabled = val;
@@ -510,16 +504,15 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-              label: const Text('Begin Official Simulation'),
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: _startPart1,
+              child: const Text('Begin Official Simulation'),
             ),
           ),
         ],
@@ -527,30 +520,40 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
     );
   }
 
-  Widget _buildSummaryTile(String badge, String title, IconData icon, Color color) {
+  Widget _buildSummaryTile(String step, String label, String title) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Center(
+              child: Text(
+                step,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(badge, style: AppTextStyles.label.copyWith(color: color)),
+                Text(label.toUpperCase(), style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
                 const SizedBox(height: 2),
                 Text(title, style: AppTextStyles.titleMedium),
               ],
@@ -576,10 +579,10 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.tealSoft,
+                  color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('Part 1 • 4-5 Mins', style: const TextStyle(color: AppColors.teal, fontSize: 11, fontWeight: FontWeight.w700)),
+                child: const Text('Part 1 • 4–5 min', style: TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -594,37 +597,21 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.surfaceBorder, width: 1),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: AppColors.primarySoft,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                q.question_text,
-                                style: AppTextStyles.h2.copyWith(fontSize: 19),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          q.questionText,
+                          style: AppTextStyles.h2.copyWith(fontSize: 19, height: 1.35),
                         ),
                         if (q.ideas.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           const Divider(),
                           const SizedBox(height: 10),
-                          Text('💡 Examiner Tip / Key Angle:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
+                          Text('KEY ANGLE', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
                           const SizedBox(height: 6),
                           Text(q.ideas.first, style: AppTextStyles.bodyMedium),
                         ],
@@ -635,16 +622,16 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
                   QuestionAudioRecorderWidget(
                     key: ValueKey('p1_rec_${q.id}_$_part1CurrentIndex'),
                     questionId: 'part1_${q.id}',
-                    initialAudioPath: _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}'],
+                    initialAudioPath: _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.questionText}'],
                     label: 'Record Answer to Question ${_part1CurrentIndex + 1}',
                     onRecordingCompleted: (path) {
                       setState(() {
-                        _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}'] = path;
+                        _perQuestionAudioMap['Part 1 (Q${_part1CurrentIndex + 1}): ${q.questionText}'] = path;
                       });
                     },
                     onRecordingDeleted: () {
                       setState(() {
-                        _perQuestionAudioMap.remove('Part 1 (Q${_part1CurrentIndex + 1}): ${q.question_text}');
+                        _perQuestionAudioMap.remove('Part 1 (Q${_part1CurrentIndex + 1}): ${q.questionText}');
                       });
                     },
                   ),
@@ -764,10 +751,10 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.orangeSoft,
+                  color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('Question ${_part3CurrentIndex + 1} of ${followUps.length}', style: const TextStyle(color: AppColors.orange, fontSize: 11, fontWeight: FontWeight.w700)),
+                child: Text('Question ${_part3CurrentIndex + 1} of ${followUps.length}', style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -782,45 +769,29 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.surfaceBorder, width: 1),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: AppColors.orangeSoft,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.forum_outlined, color: AppColors.orange, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                currentQ,
-                                style: AppTextStyles.h2.copyWith(fontSize: 18),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          currentQ,
+                          style: AppTextStyles.h2.copyWith(fontSize: 18, height: 1.35),
                         ),
                         const SizedBox(height: 16),
                         const Divider(),
                         const SizedBox(height: 10),
-                        Text('Examiner Focus:', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
+                        Text('EXAMINER FOCUS', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
                         const SizedBox(height: 4),
-                        Text('Express balanced viewpoints, use speculative conditionals (e.g. "If governments were to..."), and avoid one-word answers.', style: AppTextStyles.bodyMedium),
+                        Text('Express balanced viewpoints, use speculative conditionals (e.g. "If governments were to..."), and avoid short yes/no answers.', style: AppTextStyles.bodyMedium),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   QuestionAudioRecorderWidget(
-                    key: ValueKey('p3_rec_${_part3CurrentIndex}'),
-                    questionId: 'part3_${_part3CurrentIndex}',
+                    key: ValueKey('p3_rec_$_part3CurrentIndex'),
+                    questionId: 'part3_$_part3CurrentIndex',
                     initialAudioPath: _perQuestionAudioMap['Part 3 (Q${_part3CurrentIndex + 1}): $currentQ'],
                     label: 'Record Answer to Discussion Question ${_part3CurrentIndex + 1}',
                     onRecordingCompleted: (path) {
@@ -842,16 +813,15 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
-              label: Text(_part3CurrentIndex + 1 < followUps.length ? 'Next Discussion Question' : 'Finish Exam & Receive Official AI Score'),
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.orange,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: _nextPart3Question,
+              child: Text(_part3CurrentIndex + 1 < followUps.length ? 'Next Discussion Question' : 'Finish Exam & Analyze Score'),
             ),
           ),
         ],
@@ -892,52 +862,32 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
         children: [
           // Top Overall Band Banner
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: AppColors.primaryCard,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.25),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(22),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        eval.isAiEvaluated ? 'OFFICIAL AI EXAM REPORT' : 'SIMULATION RESULT (PRACTICE MODE)',
-                        style: AppTextStyles.label.copyWith(color: Colors.white70, fontSize: 11),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Band ${eval.overallBand.toStringAsFixed(1)}',
-                        style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        eval.isAiEvaluated
-                            ? (eval.id.startsWith('groq_')
-                                ? '⚡ Certified by Groq LLaMA 3.3 & Whisper V3'
-                                : '🧠 Certified by Google Gemini Multimodal AI')
-                            : 'Full Exam Completed Successfully',
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ],
-                  ),
+                Text(
+                  eval.isAiEvaluated ? 'OFFICIAL AI EXAM REPORT' : 'SIMULATION RESULT (PRACTICE MODE)',
+                  style: AppTextStyles.label.copyWith(color: Colors.white70, fontSize: 11),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 38),
+                const SizedBox(height: 6),
+                Text(
+                  'Band ${eval.overallBand.toStringAsFixed(1)}',
+                  style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  eval.isAiEvaluated
+                      ? (eval.id.startsWith('groq_')
+                          ? 'Evaluated by Groq LLaMA 3.3 & Whisper V3'
+                          : 'Evaluated by Google Gemini AI')
+                      : 'Full Exam Completed Successfully',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
                 ),
               ],
             ),
@@ -948,7 +898,7 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           if (_fullExamContinuousAudioPath != null && _fullExamContinuousAudioPath!.isNotEmpty && File(_fullExamContinuousAudioPath!).existsSync()) ...[
             RecordedAudioPlayerWidget(
               audioPath: _fullExamContinuousAudioPath!,
-              title: 'Full Continuous Exam Session Recording (Parts 1-3)',
+              title: 'Full Continuous Exam Recording (Parts 1–3)',
             ),
             const SizedBox(height: 16),
           ],
@@ -957,7 +907,7 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
           if (_recordedAudioPath != null && _recordedAudioPath!.isNotEmpty && File(_recordedAudioPath!).existsSync()) ...[
             RecordedAudioPlayerWidget(
               audioPath: _recordedAudioPath!,
-              title: 'Part 2 Cue Card Speech Recording',
+              title: 'Part 2 Cue Card Recording',
             ),
             const SizedBox(height: 16),
           ],
@@ -969,18 +919,12 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                border: Border.all(color: AppColors.surfaceBorder, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.playlist_play_rounded, color: AppColors.primary, size: 22),
-                      const SizedBox(width: 8),
-                      Text('Per-Question Audio Recordings (${_perQuestionAudioMap.length})', style: AppTextStyles.titleMedium),
-                    ],
-                  ),
+                  Text('Per-Question Recordings (${_perQuestionAudioMap.length})', style: AppTextStyles.titleMedium),
                   const SizedBox(height: 12),
                   ..._perQuestionAudioMap.entries.map((entry) {
                     return Padding(
@@ -1004,18 +948,12 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                border: Border.all(color: AppColors.surfaceBorder, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Text('AI Speech Transcript', style: AppTextStyles.titleMedium),
-                    ],
-                  ),
+                  Text('AI SPEECH TRANSCRIPT', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
                   const SizedBox(height: 8),
                   Text(eval.transcription!, style: AppTextStyles.bodyMedium.copyWith(fontStyle: FontStyle.italic)),
                 ],
@@ -1044,50 +982,38 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+              border: Border.all(color: AppColors.surfaceBorder, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('STRENGTHS', style: AppTextStyles.label.copyWith(color: AppColors.secondary, fontSize: 10.5)),
+                const SizedBox(height: 8),
                 ...eval.strengths.map((s) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_rounded, color: AppColors.teal, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(s, style: AppTextStyles.bodyMedium)),
-                    ],
-                  ),
+                  child: Text('• $s', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
                 )),
                 const Divider(height: 20),
+                Text('AREAS TO IMPROVE', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
+                const SizedBox(height: 8),
                 ...eval.areasToImprove.map((a) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.arrow_circle_up_rounded, color: AppColors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(a, style: AppTextStyles.bodyMedium)),
-                    ],
-                  ),
+                  child: Text('• $a', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
                 )),
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Qayta topshirish'),
+                child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary, width: 1.5),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: () {
                     setState(() {
@@ -1101,20 +1027,20 @@ class _FullMockSimulationPageState extends State<FullMockSimulationPage> {
                       _finalEvaluation = null;
                     });
                   },
+                  child: const Text('Try Again'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.home_rounded, size: 18, color: Colors.white),
-                  label: const Text('Bosh sahifa'),
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: () => Navigator.pop(context),
+                  child: const Text('Back Home'),
                 ),
               ),
             ],

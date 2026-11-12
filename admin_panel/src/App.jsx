@@ -7,10 +7,11 @@ import VocabularyView from './components/VocabularyView';
 import SettingsModal from './components/SettingsModal';
 import AuthModal from './components/AuthModal';
 import { api, getSavedCredentials, onAuthChange, signOut, getCurrentUser } from './supabaseClient';
-import { Database, Plus, RefreshCw, CheckCircle, AlertCircle, LogIn, LogOut } from 'lucide-react';
+import { Database, RefreshCw, CheckCircle, AlertCircle, LogIn, LogOut } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [quickAction, setQuickAction] = useState(null);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -79,145 +80,201 @@ export default function App() {
   // Auth guard: allow local demo edits if offline, but if live Supabase is connected require login
   const canEdit = !isSupabaseConnected || currentUser !== null;
 
+  const ensureCanEdit = () => {
+    if (!canEdit) {
+      showToast('Please sign in first to save changes to Supabase.', 'error');
+      setShowAuth(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleApiError = (prefix, e) => {
+    const msg = e?.message || String(e || 'Unknown error');
+    const lower = msg.toLowerCase();
+    if (lower.includes('row-level security') || lower.includes('jwt') || lower.includes('401') || lower.includes('403')) {
+      showToast(`${prefix}: Session expired or unauthorized. Please sign in again.`, 'error');
+      setShowAuth(true);
+      return;
+    }
+    showToast(`${prefix}: ${msg}`, 'error');
+  };
+
   // CRUD Handlers
   const handleAddTopic = async (topic) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const created = await api.addTopic(topic);
       setTopics(prev => [created, ...prev]);
       showToast(`Topic "${created.title}" successfully added!`);
+      return created;
     } catch (e) {
-      showToast('Failed to add topic: ' + e.message, 'error');
+      handleApiError('Failed to add topic', e);
+      return null;
     }
   };
 
   const handleUpdateTopic = async (id, updated) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const res = await api.updateTopic(id, updated);
       setTopics(prev => prev.map(t => t.id === id ? { ...t, ...res } : t));
-      showToast(`Topic updated successfully!`);
+      showToast('Topic updated successfully!');
+      return res;
     } catch (e) {
-      showToast('Failed to update topic: ' + e.message, 'error');
+      handleApiError('Failed to update topic', e);
+      return null;
     }
   };
 
   const handleDeleteTopic = async (id) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return;
     try {
       await api.deleteTopic(id);
       setTopics(prev => prev.filter(t => t.id !== id));
       setQuestions(prev => prev.filter(q => q.topic_id !== id));
       showToast('Topic deleted');
     } catch (e) {
-      showToast('Failed to delete topic: ' + e.message, 'error');
+      handleApiError('Failed to delete topic', e);
     }
   };
 
   const handleAddQuestion = async (question) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const created = await api.addQuestion(question);
       setQuestions(prev => [...prev, created]);
+      setTopics(prev => prev.map(t => t.id === created.topic_id
+        ? { ...t, questions_count: (t.questions_count || 0) + 1 }
+        : t));
       showToast('Question successfully added!');
+      return created;
     } catch (e) {
-      showToast('Failed to add question: ' + e.message, 'error');
+      handleApiError('Failed to add question', e);
+      return null;
     }
   };
 
   const handleUpdateQuestion = async (id, updated) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const res = await api.updateQuestion(id, updated);
       setQuestions(prev => prev.map(q => q.id === id ? { ...q, ...res } : q));
       showToast('Question updated successfully!');
+      return res;
     } catch (e) {
-      showToast('Failed to update question: ' + e.message, 'error');
+      handleApiError('Failed to update question', e);
+      return null;
     }
   };
 
   const handleDeleteQuestion = async (id) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return;
+    const removed = questions.find(q => q.id === id);
     try {
       await api.deleteQuestion(id);
       setQuestions(prev => prev.filter(q => q.id !== id));
+      if (removed?.topic_id) {
+        setTopics(prev => prev.map(t => t.id === removed.topic_id
+          ? { ...t, questions_count: Math.max(0, (t.questions_count || 1) - 1) }
+          : t));
+      }
       showToast('Question deleted');
     } catch (e) {
-      showToast('Failed to delete question: ' + e.message, 'error');
+      handleApiError('Failed to delete question', e);
     }
   };
 
   const handleAddCueCard = async (card) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const created = await api.addCueCard(card);
       setCueCards(prev => [created, ...prev]);
       showToast(`Cue Card "${created.title}" successfully added!`);
+      return created;
     } catch (e) {
-      showToast('Failed to add cue card: ' + e.message, 'error');
+      handleApiError('Failed to add cue card', e);
+      return null;
     }
   };
 
   const handleUpdateCueCard = async (id, updated) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const res = await api.updateCueCard(id, updated);
       setCueCards(prev => prev.map(c => c.id === id ? { ...c, ...res } : c));
       showToast('Cue card updated successfully!');
+      return res;
     } catch (e) {
-      showToast('Failed to update cue card: ' + e.message, 'error');
+      handleApiError('Failed to update cue card', e);
+      return null;
     }
   };
 
   const handleDeleteCueCard = async (id) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return;
     try {
       await api.deleteCueCard(id);
       setCueCards(prev => prev.filter(c => c.id !== id));
       showToast('Cue card deleted');
     } catch (e) {
-      showToast('Failed to delete cue card: ' + e.message, 'error');
+      handleApiError('Failed to delete cue card', e);
     }
   };
 
   const handleAddVocabulary = async (vocab) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const created = await api.addVocabulary(vocab);
       setVocabulary(prev => [created, ...prev]);
       showToast(`Vocabulary item "${created.phrase}" added!`);
+      return created;
     } catch (e) {
-      showToast('Failed to add vocabulary: ' + e.message, 'error');
+      handleApiError('Failed to add vocabulary', e);
+      return null;
     }
   };
 
   const handleUpdateVocabulary = async (id, updated) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return null;
     try {
       const res = await api.updateVocabulary(id, updated);
       setVocabulary(prev => prev.map(v => v.id === id ? { ...v, ...res } : v));
       showToast('Vocabulary updated successfully!');
+      return res;
     } catch (e) {
-      showToast('Failed to update vocabulary: ' + e.message, 'error');
+      handleApiError('Failed to update vocabulary', e);
+      return null;
     }
   };
 
   const handleDeleteVocabulary = async (id) => {
-    if (!canEdit) { setShowAuth(true); return; }
+    if (!ensureCanEdit()) return;
     try {
       await api.deleteVocabulary(id);
       setVocabulary(prev => prev.filter(v => v.id !== id));
       showToast('Vocabulary item deleted');
     } catch (e) {
-      showToast('Failed to delete vocabulary: ' + e.message, 'error');
+      handleApiError('Failed to delete vocabulary', e);
     }
   };
 
   const openAddModalFromDashboard = (type) => {
-    if (type === 'topic') setActiveTab('part1');
-    else if (type === 'question') setActiveTab('part1');
-    else if (type === 'cue_card') setActiveTab('cue_cards');
-    else if (type === 'vocabulary') setActiveTab('vocabulary');
+    if (!ensureCanEdit()) return;
+    const seq = Date.now();
+    if (type === 'topic') {
+      setActiveTab('part1');
+      setQuickAction({ type: 'topic', seq });
+    } else if (type === 'question') {
+      setActiveTab('part1');
+      setQuickAction({ type: 'question', seq });
+    } else if (type === 'cue_card') {
+      setActiveTab('cue_cards');
+      setQuickAction({ type: 'cue_card', seq });
+    } else if (type === 'vocabulary') {
+      setActiveTab('vocabulary');
+      setQuickAction({ type: 'vocabulary', seq });
+    }
   };
 
   const getPageTitle = () => {
@@ -320,6 +377,9 @@ export default function App() {
               onAddQuestion={handleAddQuestion}
               onUpdateQuestion={handleUpdateQuestion}
               onDeleteQuestion={handleDeleteQuestion}
+              quickAction={quickAction}
+              onQuickActionHandled={() => setQuickAction(null)}
+              showToast={showToast}
             />
           )}
 
@@ -329,6 +389,9 @@ export default function App() {
               onAddCueCard={handleAddCueCard}
               onUpdateCueCard={handleUpdateCueCard}
               onDeleteCueCard={handleDeleteCueCard}
+              quickAction={quickAction}
+              onQuickActionHandled={() => setQuickAction(null)}
+              showToast={showToast}
             />
           )}
 
@@ -338,6 +401,9 @@ export default function App() {
               onAddVocabulary={handleAddVocabulary}
               onUpdateVocabulary={handleUpdateVocabulary}
               onDeleteVocabulary={handleDeleteVocabulary}
+              quickAction={quickAction}
+              onQuickActionHandled={() => setQuickAction(null)}
+              showToast={showToast}
             />
           )}
         </main>

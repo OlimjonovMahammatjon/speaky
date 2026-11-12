@@ -69,46 +69,56 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
                     ),
                   ),
 
-                  // Info Tip (Solid purple soft background)
+                  // Subtitle / Format line
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.purpleSoft,
-                        borderRadius: BorderRadius.circular(14),
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.timer_outlined, size: 20, color: AppColors.purple),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Format: 1 minute preparation time + 2 minutes speaking recording.',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: Color(0xFF6B21A8),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '1 minute preparation • 2 minutes speaking recording',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primaryDark,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
 
-                  // Cards List
+                  // Cards List with pull-to-refresh
                   Expanded(
-                    child: cards.isEmpty
-                        ? Center(child: Text('No cue cards found', style: AppTextStyles.bodyMedium))
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            itemCount: cards.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 14),
-                            itemBuilder: (context, index) {
-                              final card = cards[index];
-                              return _buildCardItem(context, card);
-                            },
-                          ),
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        context.read<SpeakingBloc>().add(const LoadSpeakingDataEvent());
+                      },
+                      child: cards.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(
+                                  height: 240,
+                                  child: Center(
+                                    child: Text('No cue cards found', style: AppTextStyles.bodyMedium),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              itemCount: cards.length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final card = cards[index];
+                                return _buildCardItem(context, card);
+                              },
+                            ),
+                    ),
                   ),
                 ],
               );
@@ -163,15 +173,8 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -184,13 +187,13 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.purpleSoft,
+                    color: AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     card.topicArea,
                     style: const TextStyle(
-                      color: AppColors.purple,
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                     ),
@@ -201,10 +204,10 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
                     const BandScoreBadge(scoreText: 'Band 8.0+'),
                     IconButton(
                       constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.only(left: 6),
+                      padding: const EdgeInsets.only(left: 8),
                       icon: Icon(
-                        card.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: card.isBookmarked ? AppColors.purple : AppColors.textMuted,
+                        card.isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                        color: card.isBookmarked ? AppColors.primary : AppColors.textMuted,
                         size: 20,
                       ),
                       onPressed: () {
@@ -230,37 +233,29 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
               overflow: TextOverflow.ellipsis,
             ),
             if (card.shortSampleAnswer.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.tips_and_updates_outlined, size: 14, color: AppColors.purple),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Sample: ${card.shortSampleAnswer}',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  card.shortSampleAnswer,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
             const SizedBox(height: 12),
 
-            // Collocations teaser chips (Solid white with border)
+            // Collocations teaser chips
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -285,17 +280,15 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
 
             const SizedBox(height: 16),
 
-            // Solid Royal Blue Start Button (NO GRADIENTS)
+            // Clean Indigo Start Button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                label: const Text('Start 1-Min Prep & Speak'),
+              child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 onPressed: () {
@@ -306,6 +299,7 @@ class _CueCardsListPageState extends State<CueCardsListPage> {
                     ),
                   );
                 },
+                child: const Text('Start 1-Min Prep & Speak'),
               ),
             ),
           ],

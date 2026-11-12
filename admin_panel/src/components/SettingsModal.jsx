@@ -3,8 +3,6 @@ import { X, Database, Check, RefreshCw, Send, AlertTriangle, Cpu, Sparkles, Zap 
 import { getSavedCredentials, saveCredentials, api } from '../supabaseClient';
 
 export default function SettingsModal({ isOpen, onClose, onConnectionChanged, showToast }) {
-  if (!isOpen) return null;
-
   const credentials = getSavedCredentials();
   const [activeSubTab, setActiveSubTab] = useState('ai'); // 'ai' or 'supabase'
   
@@ -22,6 +20,7 @@ export default function SettingsModal({ isOpen, onClose, onConnectionChanged, sh
   const [savingAi, setSavingAi] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
     // Load app settings
     api.getAppSettings().then((settings) => {
       if (settings) {
@@ -31,6 +30,8 @@ export default function SettingsModal({ isOpen, onClose, onConnectionChanged, sh
       }
     });
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleSaveAll = async () => {
     setTesting(true);
@@ -191,9 +192,9 @@ export default function SettingsModal({ isOpen, onClose, onConnectionChanged, sh
                   value={aiMode}
                   onChange={(e) => setAiMode(e.target.value)}
                 >
-                  <option value="auto">⚡ Auto (Dual Race — Whichever returns first wins)</option>
-                  <option value="groq">🏎️ Prefer Groq (Whisper + LLaMA 3.3)</option>
-                  <option value="gemini">🧠 Prefer Google Gemini 1.5 Flash</option>
+                  <option value="auto">Auto (Dual Race — Whichever returns first wins)</option>
+                  <option value="groq">Prefer Groq (Whisper + LLaMA 3.3)</option>
+                  <option value="gemini">Prefer Google Gemini 1.5 Flash</option>
                 </select>
               </div>
             </div>
@@ -234,9 +235,9 @@ export default function SettingsModal({ isOpen, onClose, onConnectionChanged, sh
                 padding: '14px',
                 marginTop: '16px'
               }}>
-                <h4 style={{ fontSize: '14px', marginBottom: '4px' }}>⚡ 1-Click Database Population</h4>
+                <h4 style={{ fontSize: '14px', marginBottom: '4px' }}>1-Click Database Population</h4>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-                  Have you run the <code style={{ color: 'var(--secondary)' }}>supabase/schema.sql</code> script in your Supabase SQL Editor? Click below to seed topics, questions, and app_settings.
+                  Have you run the <code style={{ color: 'var(--primary-dark)' }}>supabase/schema.sql</code> script in your Supabase SQL Editor? Click below to seed topics, questions, and app_settings.
                 </p>
                 <button 
                   className="btn btn-secondary btn-sm"

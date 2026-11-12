@@ -108,45 +108,33 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Solid Royal Blue Brand Emblem (NO GRADIENT)
+                      // Clean Brand Emblem (Speaky Indigo)
                       Container(
-                        width: 96,
-                        height: 96,
+                        width: 84,
+                        height: 84,
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.25),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                              color: AppColors.primary.withValues(alpha: 0.22),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Icon(
-                              Icons.mic_none_rounded,
-                              size: 48,
-                              color: Colors.white,
-                            ),
-                            Positioned(
-                              top: 18,
-                              right: 20,
-                              child: Icon(
-                                Icons.auto_awesome,
-                                size: 16,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
+                        child: const Center(
+                          child: Icon(
+                            Icons.mic_rounded,
+                            size: 40,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // App Name (Solid Colors - NO GRADIENT)
+                      // App Wordmark
                       SlideTransition(
                         position: _slideAnimation,
                         child: Column(
@@ -155,20 +143,21 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'IELTS',
+                                  'IELTS ',
                                   style: AppTextStyles.h1.copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
                                     color: AppColors.textPrimary,
+                                    letterSpacing: -0.6,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
                                 Text(
-                                  'SPEAKY',
+                                  'Speaky',
                                   style: AppTextStyles.h1.copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
                                     color: AppColors.primary,
+                                    letterSpacing: -0.6,
                                   ),
                                 ),
                               ],
@@ -176,30 +165,19 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
                             const SizedBox(height: 10),
 
-                            // Subtitle Tagline
+                            // Minimal Subtitle Pill
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.primarySoft,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppColors.surfaceBorderLight,
-                                  width: 1.5,
-                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('🎯', style: TextStyle(fontSize: 13)),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Band 8.5+ Speaking Simulator',
-                                    style: AppTextStyles.label.copyWith(
-                                      color: AppColors.textSecondary,
-                                      letterSpacing: 0.4,
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                'Band 8.5+ Speaking Simulator',
+                                style: AppTextStyles.label.copyWith(
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.3,
+                                ),
                               ),
                             ),
                           ],

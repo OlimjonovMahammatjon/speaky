@@ -1,39 +1,36 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  FileText, 
-  Sparkles, 
-  Settings, 
-  Database,
-  CloudCheck,
-  CloudAlert
+import {
+  LayoutDashboard,
+  MessageSquare,
+  FileText,
+  BookOpen,
+  Settings,
 } from 'lucide-react';
 
-export default function Sidebar({ 
-  activeTab, 
-  setActiveTab, 
-  counts, 
-  isSupabaseConnected, 
-  openSettings 
+export default function Sidebar({
+  activeTab,
+  setActiveTab,
+  counts,
+  isSupabaseConnected,
+  openSettings,
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'part1', label: 'Part 1 Topics & Qs', icon: MessageSquare, badge: counts.topics },
     { id: 'cue_cards', label: 'Part 2 Cue Cards', icon: FileText, badge: counts.cueCards },
-    { id: 'vocabulary', label: 'Band 8+ Lexis', icon: Sparkles, badge: counts.vocabulary },
+    { id: 'vocabulary', label: 'Band 8+ Lexis', icon: BookOpen, badge: counts.vocabulary },
   ];
 
   return (
     <aside className="sidebar">
       {/* Brand */}
-      <div className="brand">
+      <div className="brand-logo">
         <div className="brand-icon">
-          <MessageSquare size={22} />
+          <MessageSquare size={20} />
         </div>
         <div className="brand-text">
-          <h2>IELTS <span>SPEAKY</span></h2>
-          <p>Admin Studio</p>
+          <h2>Speaky</h2>
+          <span>Admin Studio</span>
         </div>
       </div>
 

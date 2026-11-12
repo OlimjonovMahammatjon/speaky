@@ -22,14 +22,17 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
         ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarBrightness: Brightness.light,
@@ -41,8 +44,8 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.surfaceBorderLight, width: 1.5),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.surfaceBorder, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),

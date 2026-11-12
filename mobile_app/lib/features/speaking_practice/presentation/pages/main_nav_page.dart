@@ -39,30 +39,23 @@ class _MainNavPageState extends State<MainNavPage> {
         children: pages,
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          border: const Border(
-            top: BorderSide(color: AppColors.surfaceBorderLight, width: 1.5),
+          border: Border(
+            top: BorderSide(color: AppColors.surfaceBorder, width: 1),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
         ),
         child: SafeArea(
           child: SizedBox(
-            height: 64,
+            height: 62,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
-                _buildNavItem(1, Icons.article_rounded, Icons.article_outlined, 'Part 1'),
-                _buildNavItem(2, Icons.mic_none_rounded, Icons.mic_none_outlined, 'Part 2'),
+                _buildNavItem(1, Icons.chat_bubble_rounded, Icons.chat_bubble_outline_rounded, 'Part 1'),
+                _buildNavItem(2, Icons.mic_rounded, Icons.mic_none_rounded, 'Part 2'),
                 _buildNavItem(3, Icons.menu_book_rounded, Icons.menu_book_outlined, 'Vocab'),
-                _buildNavItem(4, Icons.verified_rounded, Icons.verified_outlined, 'Mock'),
+                _buildNavItem(4, Icons.assignment_turned_in_rounded, Icons.assignment_turned_in_outlined, 'Mock'),
               ],
             ),
           ),

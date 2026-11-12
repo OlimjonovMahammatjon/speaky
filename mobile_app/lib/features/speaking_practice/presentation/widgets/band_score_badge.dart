@@ -16,35 +16,20 @@ class BandScoreBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isLarge ? 14 : 10,
-        vertical: isLarge ? 6 : 4,
+        horizontal: isLarge ? 12 : 9,
+        vertical: isLarge ? 5 : 3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.tealSoft,
-        borderRadius: BorderRadius.circular(isLarge ? 12 : 8),
-        border: Border.all(
-          color: AppColors.teal.withValues(alpha: 0.25),
-          width: 1,
-        ),
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(isLarge ? 10 : 8),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.star_rounded,
-            color: AppColors.teal,
-            size: isLarge ? 16 : 13,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            scoreText,
-            style: (isLarge ? AppTextStyles.titleMedium : AppTextStyles.bodySmall).copyWith(
-              color: AppColors.teal,
-              fontWeight: FontWeight.w800,
-              fontSize: isLarge ? 14 : 11,
-            ),
-          ),
-        ],
+      child: Text(
+        scoreText,
+        style: (isLarge ? AppTextStyles.titleMedium : AppTextStyles.bodySmall).copyWith(
+          color: AppColors.primaryDark,
+          fontWeight: FontWeight.w700,
+          fontSize: isLarge ? 13 : 11,
+        ),
       ),
     );
   }

@@ -18,29 +18,16 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
 
   final List<String> _typeFilters = ['All', 'Collocation', 'Idiom', 'DiscourseMarker', 'AcademicLexis'];
 
-  Color _getTypeBgColor(VocabularyType type) {
+  String _formatTypeLabel(VocabularyType type) {
     switch (type) {
       case VocabularyType.collocation:
-        return AppColors.tealIconBg;
+        return 'COLLOCATION';
       case VocabularyType.idiom:
-        return AppColors.orangeSoft;
+        return 'IDIOM';
       case VocabularyType.discourseMarker:
-        return AppColors.purpleSoft;
+        return 'DISCOURSE MARKER';
       case VocabularyType.academicLexis:
-        return AppColors.mintSoft;
-    }
-  }
-
-  Color _getTypeTextColor(VocabularyType type) {
-    switch (type) {
-      case VocabularyType.collocation:
-        return AppColors.tealIcon;
-      case VocabularyType.idiom:
-        return AppColors.orange;
-      case VocabularyType.discourseMarker:
-        return AppColors.purple;
-      case VocabularyType.academicLexis:
-        return AppColors.mint;
+        return 'ACADEMIC LEXIS';
     }
   }
 
@@ -145,19 +132,36 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
 
                   const SizedBox(height: 6),
 
-                  // Vocabulary List
+                  // Vocabulary List with Pull-to-Refresh
                   Expanded(
-                    child: items.isEmpty
-                        ? Center(child: Text('No vocabulary items found', style: AppTextStyles.bodyMedium))
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            itemCount: items.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return _buildVocabCard(item);
-                            },
-                          ),
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        context.read<SpeakingBloc>().add(const LoadSpeakingDataEvent());
+                      },
+                      child: items.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(
+                                  height: 240,
+                                  child: Center(
+                                    child: Text('No vocabulary items found', style: AppTextStyles.bodyMedium),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              itemCount: items.length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final item = items[index];
+                                return _buildVocabCard(item);
+                              },
+                            ),
+                    ),
                   ),
                 ],
               );
@@ -209,22 +213,12 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
   }
 
   Widget _buildVocabCard(VocabularyEntity item) {
-    final typeBg = _getTypeBgColor(item.type);
-    final typeColor = _getTypeTextColor(item.type);
-
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,15 +233,15 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.tealSoft,
+                  color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   item.bandTarget,
                   style: const TextStyle(
-                    color: AppColors.teal,
+                    color: AppColors.primaryDark,
                     fontWeight: FontWeight.w700,
                     fontSize: 11,
                   ),
@@ -258,28 +252,31 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
           const SizedBox(height: 4),
           Row(
             children: [
-              Text(
-                item.phonetics,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
+              if (item.phonetics.isNotEmpty) ...[
+                Text(
+                  item.phonetics,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: typeBg,
+                  color: AppColors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  item.type.name.toUpperCase(),
-                  style: TextStyle(
+                  _formatTypeLabel(item.type),
+                  style: const TextStyle(
                     fontSize: 10,
-                    color: typeColor,
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
                   ),
                 ),
               ),
@@ -292,32 +289,23 @@ class _VocabularyBankPageState extends State<VocabularyBankPage> {
           ),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(12),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
+              border: const Border(
+                left: BorderSide(color: AppColors.primary, width: 3),
+              ),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.format_quote_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    item.exampleIeltsContext,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 12,
-                      height: 1.4,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              '"${item.exampleIeltsContext}"',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 12.5,
+                height: 1.45,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ],

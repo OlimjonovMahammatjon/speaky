@@ -19,52 +19,32 @@ class CueCardBox extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.surfaceBorder, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header (Solid Purple Soft tint - NO GRADIENT)
+          // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: const BoxDecoration(
-              color: AppColors.purpleSoft,
+              color: AppColors.primarySoft,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(21),
-                topRight: Radius.circular(21),
+                topLeft: Radius.circular(19),
+                topRight: Radius.circular(19),
               ),
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.assignment_outlined,
-                    color: AppColors.purple,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'PART 2: CANDIDATE TASK CARD',
+                        'PART 2 • CANDIDATE TASK CARD',
                         style: AppTextStyles.label.copyWith(
-                          color: AppColors.purple,
+                          color: AppColors.primary,
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -82,8 +62,8 @@ class CueCardBox extends StatelessWidget {
                 if (onBookmarkTap != null)
                   IconButton(
                     icon: Icon(
-                      cueCard.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: cueCard.isBookmarked ? AppColors.purple : AppColors.textMuted,
+                      cueCard.isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                      color: cueCard.isBookmarked ? AppColors.primary : AppColors.textMuted,
                     ),
                     onPressed: onBookmarkTap,
                   ),
@@ -98,7 +78,7 @@ class CueCardBox extends StatelessWidget {
               children: [
                 Text(
                   cueCard.cuePrompt,
-                  style: AppTextStyles.titleLarge.copyWith(height: 1.4),
+                  style: AppTextStyles.titleLarge.copyWith(height: 1.45),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -120,7 +100,7 @@ class CueCardBox extends StatelessWidget {
                           width: 6,
                           height: 6,
                           decoration: const BoxDecoration(
-                            color: AppColors.purple,
+                            color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -137,60 +117,47 @@ class CueCardBox extends StatelessWidget {
                     ),
                   );
                 }),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundSecondary,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.timer_outlined,
-                        size: 18,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'You will have 1 minute to prepare and 1 to 2 minutes to speak.',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '1 min preparation • 1–2 min speaking',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
 
-                // Story Ideas / Angles (Solid Purple Soft - NO GRADIENT)
+                // Story Ideas / Angles
                 if (cueCard.storyIdeas.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.purpleSoft,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.purple.withValues(alpha: 0.2)),
+                      color: AppColors.backgroundSecondary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: const Border(
+                        left: BorderSide(color: AppColors.primary, width: 3),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.lightbulb_outline, size: 16, color: AppColors.purple),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Story Ideas & Angles (Fikrlar / Mavzular)',
-                              style: TextStyle(
-                                color: AppColors.purple,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.5,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'STORY IDEAS',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            letterSpacing: 0.7,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         ...cueCard.storyIdeas.map((idea) => Padding(
@@ -198,7 +165,7 @@ class CueCardBox extends StatelessWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('• ', style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.bold, fontSize: 13)),
+                                  const Text('• ', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                                   Expanded(
                                     child: Text(
                                       idea,
@@ -217,33 +184,27 @@ class CueCardBox extends StatelessWidget {
                   ),
                 ],
 
-                // Short Sample Answer (Solid Light Slate - NO GRADIENT)
+                // Short Sample Answer
                 if (cueCard.shortSampleAnswer.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.surfaceBorderLight, width: 1.2),
+                      color: AppColors.primarySoft.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: AppColors.primary),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Short Sample Answer (Qisqa namunaviy javob)',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'QUICK SAMPLE ANSWER',
+                          style: TextStyle(
+                            color: AppColors.primaryDark,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            letterSpacing: 0.7,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(

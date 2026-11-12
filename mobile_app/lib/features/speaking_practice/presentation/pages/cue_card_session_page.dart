@@ -85,28 +85,20 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
           ),
           const SizedBox(height: 16),
 
-          // Instructions Callout (Solid Amber soft background - NO GRADIENT)
+          // Instructions Callout
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.orangeSoft,
+              color: AppColors.primarySoft,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.lightbulb_outline, color: AppColors.orange, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Read the prompts carefully. Organize your 4 bullet points mentally before speaking starts.',
-                    style: TextStyle(
-                      color: Color(0xFF9A3412),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              'Read the prompts carefully and organize your 4 bullet points before speaking starts.',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primaryDark,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -116,17 +108,17 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
 
           const SizedBox(height: 24),
 
-          // Quick Action to Skip Prep and Speak Immediately (Solid Teal - NO GRADIENT)
+          // Quick Action to Skip Prep and Speak Immediately
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.mic, color: Colors.white),
-              label: const Text('I\'m Ready! Start Speaking Now'),
+              icon: const Icon(Icons.mic_rounded, color: Colors.white),
+              label: const Text("I'm Ready! Start Speaking Now"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.teal,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: () {
                 context.read<MockTestBloc>().add(const SkipPrepToSpeakingEvent());
@@ -261,67 +253,47 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Overall Band Score Banner (Solid Royal Blue - NO GRADIENT)
+          // Overall Band Score Banner
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: AppColors.primaryCard,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.25),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(22),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        eval.isAiEvaluated
-                            ? 'OFFICIAL AI EXAMINER EVALUATION'
-                            : 'ESTIMATED BAND SCORE (PRACTICE MODE)',
-                        style: AppTextStyles.label.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          letterSpacing: 1.0,
-                          fontSize: 10.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Band ${eval.overallBand.toStringAsFixed(1)}',
-                        style: const TextStyle(
-                          fontSize: 34,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        eval.isAiEvaluated
-                            ? (eval.id.startsWith('groq_')
-                                ? '⚡ Groq Engine (Whisper V3 + LLaMA 3.3)'
-                                : '🧠 Google Gemini Multimodal AI Engine')
-                            : 'Good Stamina • Fluency Score Estimated',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                Text(
+                  eval.isAiEvaluated
+                      ? 'OFFICIAL AI EXAMINER EVALUATION'
+                      : 'ESTIMATED BAND SCORE (PRACTICE MODE)',
+                  style: AppTextStyles.label.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    letterSpacing: 1.0,
+                    fontSize: 10.5,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+                const SizedBox(height: 6),
+                Text(
+                  'Band ${eval.overallBand.toStringAsFixed(1)}',
+                  style: const TextStyle(
+                    fontSize: 34,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
                   ),
-                  child: const Icon(Icons.workspace_premium, color: Colors.white, size: 36),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  eval.isAiEvaluated
+                      ? (eval.id.startsWith('groq_')
+                          ? 'Groq Engine (Whisper V3 + LLaMA 3.3)'
+                          : 'Google Gemini Multimodal AI')
+                      : 'Good Stamina • Fluency Score Estimated',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12.5,
+                  ),
                 ),
               ],
             ),
@@ -345,19 +317,13 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                border: Border.all(color: AppColors.surfaceBorder, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.record_voice_over_rounded, color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Text('Speech Transcript (Recognized by AI)', style: AppTextStyles.titleMedium),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
+                  Text('SPEECH TRANSCRIPT', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
+                  const SizedBox(height: 8),
                   Text(
                     eval.transcription!,
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -413,35 +379,23 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+              border: Border.all(color: AppColors.surfaceBorder, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.check_circle_rounded, color: AppColors.teal, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Strengths Observed', style: AppTextStyles.titleMedium),
-                  ],
-                ),
+                Text('STRENGTHS OBSERVED', style: AppTextStyles.label.copyWith(color: AppColors.secondary, fontSize: 10.5)),
                 const SizedBox(height: 8),
                 ...eval.strengths.map((s) => Padding(
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('• $s', style: AppTextStyles.bodyMedium),
+                      child: Text('• $s', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
                     )),
                 const Divider(height: 20),
-                Row(
-                  children: [
-                    const Icon(Icons.arrow_circle_up_rounded, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Areas to Improve', style: AppTextStyles.titleMedium),
-                  ],
-                ),
+                Text('AREAS TO IMPROVE', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
                 const SizedBox(height: 8),
                 ...eval.areasToImprove.map((a) => Padding(
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('• $a', style: AppTextStyles.bodyMedium),
+                      child: Text('• $a', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
                     )),
               ],
             ),
@@ -523,14 +477,12 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
           if (state.cueCard.part3FollowUps.isNotEmpty) ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.forum_outlined, color: Colors.white, size: 20),
-                label: const Text('Continue to Part 3 Discussion'),
+              child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.orange,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () {
                   context.read<MockTestBloc>().add(const ResetSessionEvent());
@@ -541,9 +493,10 @@ class _CueCardSessionPageState extends State<CueCardSessionPage> {
                     ),
                   );
                 },
+                child: const Text('Continue to Part 3 Discussion'),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
           ],
 
           // Return Home or Repeat (Solid buttons - NO GRADIENTS)

@@ -7,6 +7,7 @@ class CountdownTimerWidget extends StatelessWidget {
   final int totalSeconds;
   final String label;
   final bool isSpeaking;
+  final Color? progressColor;
 
   const CountdownTimerWidget({
     super.key,
@@ -14,6 +15,7 @@ class CountdownTimerWidget extends StatelessWidget {
     required this.totalSeconds,
     required this.label,
     this.isSpeaking = false,
+    this.progressColor,
   });
 
   @override
@@ -22,7 +24,7 @@ class CountdownTimerWidget extends StatelessWidget {
     final minutes = (remainingSeconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (remainingSeconds % 60).toString().padLeft(2, '0');
 
-    final activeColor = isSpeaking ? AppColors.orange : AppColors.primary;
+    final activeColor = progressColor ?? (isSpeaking ? AppColors.orange : AppColors.primary);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

@@ -52,7 +52,7 @@ export const getSupabase = () => {
 
 export const getCurrentUser = () => {
   const client = getSupabase();
-  if (!client) return null;
+  if (!client) return Promise.resolve(null);
   return client.auth.getUser().then(({ data }) => data?.user || null).catch(() => null);
 };
 

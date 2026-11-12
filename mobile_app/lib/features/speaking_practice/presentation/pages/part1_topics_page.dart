@@ -29,54 +29,22 @@ class _Part1TopicsPageState extends State<Part1TopicsPage> {
 
   String _searchQuery = '';
 
-  Color _getCategoryIconBg(TopicCategory category) {
+  String _formatCategoryLabel(TopicCategory category) {
     switch (category) {
       case TopicCategory.technology:
-        return AppColors.tealIconBg;
+        return 'Technology';
       case TopicCategory.workAndStudy:
-        return AppColors.orangeSoft;
+        return 'Work & Study';
       case TopicCategory.travelAndPlaces:
-        return AppColors.primarySoft;
+        return 'Travel & Places';
       case TopicCategory.environment:
-        return AppColors.mintSoft;
+        return 'Environment';
       case TopicCategory.artAndCulture:
-        return AppColors.purpleSoft;
-      default:
-        return AppColors.primarySoft;
-    }
-  }
-
-  Color _getCategoryIconColor(TopicCategory category) {
-    switch (category) {
-      case TopicCategory.technology:
-        return AppColors.tealIcon;
-      case TopicCategory.workAndStudy:
-        return AppColors.orange;
-      case TopicCategory.travelAndPlaces:
-        return AppColors.primary;
-      case TopicCategory.environment:
-        return AppColors.mint;
-      case TopicCategory.artAndCulture:
-        return AppColors.purple;
-      default:
-        return AppColors.primary;
-    }
-  }
-
-  IconData _getCategoryIcon(TopicCategory category) {
-    switch (category) {
-      case TopicCategory.technology:
-        return Icons.smart_toy_outlined;
-      case TopicCategory.workAndStudy:
-        return Icons.business_center_outlined;
-      case TopicCategory.travelAndPlaces:
-        return Icons.location_city_outlined;
-      case TopicCategory.environment:
-        return Icons.eco_outlined;
-      case TopicCategory.artAndCulture:
-        return Icons.music_note_outlined;
-      default:
-        return Icons.chat_bubble_outline_rounded;
+        return 'Art & Culture';
+      case TopicCategory.societyAndPeople:
+        return 'Society & People';
+      case TopicCategory.hobbiesAndLifestyle:
+        return 'Hobbies & Lifestyle';
     }
   }
 
@@ -177,24 +145,39 @@ class _Part1TopicsPageState extends State<Part1TopicsPage> {
                     ),
                   ),
 
-                  // Topic List
+                  // Topic List with Pull-to-Refresh
                   Expanded(
-                    child: topics.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No topics found',
-                              style: AppTextStyles.bodyMedium,
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        context.read<SpeakingBloc>().add(const LoadSpeakingDataEvent());
+                      },
+                      child: topics.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(
+                                  height: 240,
+                                  child: Center(
+                                    child: Text(
+                                      'No topics found',
+                                      style: AppTextStyles.bodyMedium,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              itemCount: topics.length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final topic = topics[index];
+                                return _buildTopicCard(context, topic);
+                              },
                             ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            itemCount: topics.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final topic = topics[index];
-                              return _buildTopicCard(context, topic);
-                            },
-                          ),
+                    ),
                   ),
                 ],
               );
@@ -246,103 +229,99 @@ class _Part1TopicsPageState extends State<Part1TopicsPage> {
   }
 
   Widget _buildTopicCard(BuildContext context, TopicEntity topic) {
-    final iconBg = _getCategoryIconBg(topic.category);
-    final iconColor = _getCategoryIconColor(topic.category);
-    final icon = _getCategoryIcon(topic.category);
+    final categoryLabel = _formatCategoryLabel(topic.category).toUpperCase();
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           onTap: () => _openTopicQuestionsBottomSheet(context, topic),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Soft Squircle Icon Container
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 24),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'PART 1',
-                            style: AppTextStyles.label.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 10,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              BandScoreBadge(scoreText: topic.bandTarget),
-                              const SizedBox(width: 2),
-                              IconButton(
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                                icon: Icon(
-                                  topic.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                                  color: topic.isBookmarked ? AppColors.primary : AppColors.textMuted,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  context.read<SpeakingBloc>().add(
-                                        ToggleTopicBookmarkEvent(
-                                          topicId: topic.id,
-                                          currentStatus: topic.isBookmarked,
-                                        ),
-                                      );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(height: 2),
-                      Text(topic.title, style: AppTextStyles.titleMedium),
-                      const SizedBox(height: 4),
-                      Text(
-                        topic.description,
-                        style: AppTextStyles.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${topic.questionsCount} Questions • Tap to practice',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                      child: Text(
+                        categoryLabel,
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.primaryDark,
+                          fontSize: 10,
+                          letterSpacing: 0.6,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Row(
+                      children: [
+                        BandScoreBadge(scoreText: topic.bandTarget),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            topic.isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            color: topic.isBookmarked ? AppColors.primary : AppColors.textMuted,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            context.read<SpeakingBloc>().add(
+                                  ToggleTopicBookmarkEvent(
+                                    topicId: topic.id,
+                                    currentStatus: topic.isBookmarked,
+                                  ),
+                                );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(topic.title, style: AppTextStyles.titleLarge),
+                const SizedBox(height: 4),
+                Text(
+                  topic.description,
+                  style: AppTextStyles.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      '${topic.questionsCount} Questions',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Text(
+                      'Practice',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+                  ],
                 ),
               ],
             ),
@@ -442,226 +421,224 @@ class _TopicQuestionsSheetContentState extends State<_TopicQuestionsSheetContent
         ),
         const Divider(),
         Expanded(
-          child: ListView.separated(
-            controller: widget.scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            itemCount: widget.questions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 14),
-            itemBuilder: (context, index) {
-              final q = widget.questions[index];
-              final isExpanded = _expandedAnswers[q.id] ?? false;
-
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: AppColors.primarySoft,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Q${index + 1}',
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            q.questionText,
-                            style: AppTextStyles.titleMedium.copyWith(height: 1.35),
-                          ),
-                        ),
-                      ],
+          child: widget.questions.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      'No questions added to this topic yet.',
+                      style: AppTextStyles.bodyMedium,
+                      textAlign: TextAlign.center,
                     ),
-                    // Brainstorming Ideas (Solid Teal Soft tint - NO GRADIENT)
-                    if (q.ideas.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.tealSoft,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.teal.withValues(alpha: 0.2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.tips_and_updates_outlined, size: 16, color: AppColors.teal),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Brainstorming Ideas & Key Points',
-                                  style: TextStyle(
-                                    color: AppColors.teal,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
+                  ),
+                )
+              : ListView.separated(
+                  controller: widget.scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  itemCount: widget.questions.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final q = widget.questions[index];
+                    final isExpanded = _expandedAnswers[q.id] ?? false;
+
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: AppColors.surfaceBorder, width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primarySoft,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            ...q.ideas.map((idea) => Padding(
-                              padding: const EdgeInsets.only(bottom: 3),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('• ', style: TextStyle(color: AppColors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Expanded(
-                                    child: Text(
-                                      idea,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontSize: 12.5,
-                                        height: 1.35,
-                                      ),
+                                child: Center(
+                                  child: Text(
+                                    'Q${index + 1}',
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 11,
                                     ),
                                   ),
-                                ],
-                              ),
-                            )),
-                          ],
-                        ),
-                      ),
-
-                    // Short Sample Answer (Solid Light Slate - NO GRADIENT)
-                    if (q.shortSampleAnswer.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.surfaceBorderLight, width: 1.2),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: AppColors.primary),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Short Sample Answer (Qisqa namunaviy javob)',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              q.shortSampleAnswer,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 13,
-                                height: 1.4,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Examiner Tips Box (Solid amber soft background)
-                    if (q.examinerTips.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.orangeSoft,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.lightbulb_outline,
-                              size: 18,
-                              color: AppColors.orange,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                q.examinerTips.first,
-                                style: const TextStyle(
-                                  color: Color(0xFF9A3412),
-                                  fontSize: 12,
-                                  height: 1.3,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    const SizedBox(height: 12),
-
-                    // Practice Voice Recording for this specific question
-                    QuestionAudioRecorderWidget(
-                      key: ValueKey('topic_q_${q.id}'),
-                      questionId: 'topic_${q.id}',
-                      label: 'Javobingizni ovozda yozib oling (Q${index + 1})',
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Toggle Sample Answer
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _expandedAnswers[q.id] = !isExpanded;
-                            });
-                          },
-                          child: Row(
-                            children: [
-                              Icon(
-                                isExpanded ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                size: 16,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                isExpanded ? 'Hide Band 8.5 Answer' : 'Show Band 8.5 Answer',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  q.questionText,
+                                  style: AppTextStyles.titleMedium.copyWith(height: 1.4),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        const BandScoreBadge(scoreText: 'Band 8.5'),
-                      ],
-                    ),
+                          const SizedBox(height: 12),
+                          // Brainstorming Ideas
+                          if (q.ideas.isNotEmpty)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundSecondary,
+                                borderRadius: BorderRadius.circular(12),
+                                border: const Border(
+                                  left: BorderSide(color: AppColors.primary, width: 3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'KEY IDEAS',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      letterSpacing: 0.7,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  ...q.ideas.map((idea) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 3),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('• ', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                                        Expanded(
+                                          child: Text(
+                                            idea,
+                                            style: const TextStyle(
+                                              color: AppColors.textPrimary,
+                                              fontSize: 12.5,
+                                              height: 1.35,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+
+                          // Short Sample Answer
+                          if (q.shortSampleAnswer.isNotEmpty)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySoft.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'QUICK SAMPLE ANSWER',
+                                    style: TextStyle(
+                                      color: AppColors.primaryDark,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      letterSpacing: 0.7,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    q.shortSampleAnswer,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13,
+                                      height: 1.4,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Examiner Tip
+                          if (q.examinerTips.isNotEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundSecondary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'EXAMINER TIP',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10.5,
+                                      letterSpacing: 0.7,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    q.examinerTips.first,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 12.5,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          const SizedBox(height: 12),
+
+                          // Practice Voice Recording for this specific question
+                          QuestionAudioRecorderWidget(
+                            key: ValueKey('topic_q_${q.id}'),
+                            questionId: 'topic_${q.id}',
+                            label: 'Record your answer (Q${index + 1})',
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          // Toggle Sample Answer
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _expandedAnswers[q.id] = !isExpanded;
+                                  });
+                                },
+                                child: Text(
+                                  isExpanded ? 'Hide Band 8.5 Answer' : 'Show Band 8.5 Answer',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const BandScoreBadge(scoreText: 'Band 8.5'),
+                            ],
+                          ),
 
                     if (isExpanded) ...[
                       const SizedBox(height: 10),

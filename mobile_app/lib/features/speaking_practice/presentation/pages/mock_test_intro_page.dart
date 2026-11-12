@@ -84,54 +84,45 @@ class MockTestIntroPage extends StatelessWidget {
               _buildTestPartTile(
                 partNumber: '1',
                 title: 'Introduction & Interview',
-                duration: '4 - 5 Minutes',
+                duration: '4 - 5 min',
                 description: 'General questions regarding your work, studies, hometown, and everyday hobbies.',
-                icon: Icons.chat_bubble_outline_rounded,
-                iconColor: AppColors.tealIcon,
-                iconBgColor: AppColors.tealIconBg,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               _buildTestPartTile(
                 partNumber: '2',
                 title: 'Candidate Long Turn (Cue Card)',
-                duration: '3 - 4 Minutes',
+                duration: '3 - 4 min',
                 description: '1 minute note-taking preparation, followed by a sustained 2-minute speech on a given topic.',
-                icon: Icons.timer_outlined,
-                iconColor: AppColors.purple,
-                iconBgColor: AppColors.purpleSoft,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               _buildTestPartTile(
                 partNumber: '3',
                 title: 'Two-Way Abstract Discussion',
-                duration: '4 - 5 Minutes',
+                duration: '4 - 5 min',
                 description: 'In-depth, analytical questions exploring broader societal themes connected to Part 2.',
-                icon: Icons.forum_outlined,
-                iconColor: AppColors.orange,
-                iconBgColor: AppColors.orangeSoft,
               ),
 
               const SizedBox(height: 24),
 
-              Text('Examiner Assessment Criteria', style: AppTextStyles.h3),
+              Text('Assessment Criteria', style: AppTextStyles.h3),
               const SizedBox(height: 12),
 
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.surfaceBorder, width: 1),
                 ),
                 child: Column(
                   children: [
-                    _buildCriteriaRow('Fluency & Coherence (25%)', 'Smooth rhythm, natural pause placement, linking words.'),
-                    const Divider(height: 18),
-                    _buildCriteriaRow('Lexical Resource (25%)', 'Precise topic vocabulary, collocations, idiomatic control.'),
-                    const Divider(height: 18),
-                    _buildCriteriaRow('Grammar Range & Accuracy (25%)', 'Complex sentences, conditionals, tense accuracy.'),
-                    const Divider(height: 18),
-                    _buildCriteriaRow('Pronunciation (25%)', 'Word stress, intonation, sentence melody, clear vowels.'),
+                    _buildCriteriaRow('Fluency & Coherence', 'Smooth rhythm, natural pause placement, linking words.'),
+                    const Divider(height: 20),
+                    _buildCriteriaRow('Lexical Resource', 'Precise topic vocabulary, collocations, idiomatic control.'),
+                    const Divider(height: 20),
+                    _buildCriteriaRow('Grammar Range & Accuracy', 'Complex sentences, conditionals, tense accuracy.'),
+                    const Divider(height: 20),
+                    _buildCriteriaRow('Pronunciation', 'Word stress, intonation, sentence melody, clear vowels.'),
                   ],
                 ),
               ),
@@ -142,14 +133,12 @@ class MockTestIntroPage extends StatelessWidget {
                 builder: (context, state) {
                   return SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                      label: const Text('Start Full IELTS Speaking Mock Test'),
+                    child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () async {
                         if (state is SpeakingLoaded && state.cueCards.isNotEmpty && state.allTopics.isNotEmpty) {
@@ -186,6 +175,7 @@ class MockTestIntroPage extends StatelessWidget {
                           );
                         }
                       },
+                      child: const Text('Start Full IELTS Speaking Mock Test'),
                     ),
                   );
                 },
@@ -204,28 +194,34 @@ class MockTestIntroPage extends StatelessWidget {
     required String title,
     required String duration,
     required String description,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(14),
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Center(
+              child: Text(
+                partNumber,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -235,7 +231,7 @@ class MockTestIntroPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('PART $partNumber', style: AppTextStyles.label.copyWith(color: iconColor)),
+                    Text('PART $partNumber', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
                     Text(duration, style: AppTextStyles.bodySmall),
                   ],
                 ),
@@ -255,7 +251,22 @@ class MockTestIntroPage extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.check_circle_rounded, size: 18, color: AppColors.teal),
+        Container(
+          margin: const EdgeInsets.only(top: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Text(
+            '25%',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+              fontSize: 10.5,
+            ),
+          ),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -266,7 +277,7 @@ class MockTestIntroPage extends StatelessWidget {
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 13.5,
                 ),
               ),
               const SizedBox(height: 2),

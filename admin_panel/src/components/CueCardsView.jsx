@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Pencil, FileText, CheckCircle2, Bookmark } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 
-export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, onDeleteCueCard }) {
+export default function CueCardsView({
+  cueCards,
+  onAddCueCard,
+  onUpdateCueCard,
+  onDeleteCueCard,
+  quickAction,
+  onQuickActionHandled,
+  showToast,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [editingCueCardId, setEditingCueCardId] = useState(null);
   const [form, setForm] = useState({
@@ -19,7 +27,7 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
     part3_follow_ups: '',
   });
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
     setEditingCueCardId(null);
     setForm({
       title: '',
@@ -36,7 +44,14 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
       part3_follow_ups: '',
     });
     setShowModal(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (quickAction?.type === 'cue_card') {
+      openCreateModal();
+      onQuickActionHandled?.();
+    }
+  }, [quickAction, openCreateModal, onQuickActionHandled]);
 
   const openEditModal = (card) => {
     setEditingCueCardId(card.id);
@@ -58,11 +73,18 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
     setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.cue_prompt) return;
+    const title = (form.title || '').trim();
+    const cuePrompt = (form.cue_prompt || '').trim();
+    if (!title || !cuePrompt) {
+      showToast?.('Cue card title and prompt are required.', 'error');
+      return;
+    }
 
-    const bullets = [form.bullet_1, form.bullet_2, form.bullet_3, form.bullet_4].filter(Boolean);
+    const bullets = [form.bullet_1, form.bullet_2, form.bullet_3, form.bullet_4]
+      .map(s => (s || '').trim())
+      .filter(Boolean);
     const storyIdeasList = form.story_ideas
       ? (typeof form.story_ideas === 'string' ? form.story_ideas.split('\n').map(s => s.trim()).filter(Boolean) : form.story_ideas)
       : [];
@@ -74,21 +96,23 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
       : [];
 
     const payload = {
-      title: form.title,
-      topic_area: form.topic_area || 'Life Experience',
-      cue_prompt: form.cue_prompt,
+      title,
+      topic_area: (form.topic_area || '').trim() || 'Life Experience',
+      cue_prompt: cuePrompt,
       bullet_points: bullets,
       story_ideas: storyIdeasList,
-      short_sample_answer: form.short_sample_answer,
-      band9_model_answer: form.band9_model_answer,
+      short_sample_answer: (form.short_sample_answer || '').trim(),
+      band9_model_answer: (form.band9_model_answer || '').trim(),
       key_collocations: collocations,
       part3_follow_ups: followUps,
     };
 
     if (editingCueCardId && onUpdateCueCard) {
-      onUpdateCueCard(editingCueCardId, payload);
-    } else {
-      onAddCueCard(payload);
+      const updated = await onUpdateCueCard(editingCueCardId, payload);
+      if (!updated) return;
+    } else if (onAddCueCard) {
+      const created = await onAddCueCard(payload);
+      if (!created) return;
     }
 
     setShowModal(false);
@@ -127,11 +151,11 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
             {/* Header */}
             <div style={{
               padding: '16px 20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              backgroundColor: 'var(--bg-main)',
               borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
             }}>
               <div>
                 <span className="badge badge-primary">{card.topic_area}</span>
@@ -188,14 +212,15 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
               {/* Story Ideas & Angles */}
               {card.story_ideas && card.story_ideas.length > 0 && (
                 <div style={{
-                  backgroundColor: 'rgba(168, 85, 247, 0.08)',
-                  border: '1px solid rgba(168, 85, 247, 0.25)',
-                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--bg-main)',
+                  border: '1px solid var(--border)',
+                  borderLeft: '3px solid var(--primary)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '10px 14px',
-                  marginBottom: '12px'
+                  marginBottom: '12px',
                 }}>
-                  <div style={{ fontSize: '11px', color: '#c084fc', fontWeight: 700, marginBottom: '6px' }}>
-                    💡 STORY ANGLES / BRAINSTORMING IDEAS:
+                  <div style={{ fontSize: '11px', color: 'var(--primary-dark)', fontWeight: 700, letterSpacing: '0.4px', marginBottom: '6px' }}>
+                    STORY ANGLES & IDEAS
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12.5px', color: 'var(--text-primary)' }}>
                     {card.story_ideas.map((idea, i) => (
@@ -208,16 +233,16 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
               {/* Short Sample Answer */}
               {card.short_sample_answer && (
                 <div style={{
-                  backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                  border: '1px solid rgba(99, 102, 241, 0.2)',
-                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--primary-soft)',
+                  border: '1px solid var(--primary-border)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '10px 14px',
                   marginBottom: '12px',
                   fontSize: '13px',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
                 }}>
-                  <div style={{ fontSize: '11px', color: 'var(--primary-light)', fontWeight: 700, marginBottom: '4px' }}>
-                    📝 SHORT SAMPLE ANSWER (QISQA JAVOB):
+                  <div style={{ fontSize: '11px', color: 'var(--primary-dark)', fontWeight: 700, letterSpacing: '0.4px', marginBottom: '4px' }}>
+                    SHORT SAMPLE ANSWER
                   </div>
                   <em style={{ fontStyle: 'italic' }}>{card.short_sample_answer}</em>
                 </div>
@@ -226,11 +251,11 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
               {card.key_collocations && card.key_collocations.length > 0 && (
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '6px' }}>
-                    KEY COLLOCATIONS:
+                    KEY COLLOCATIONS
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {card.key_collocations.map((c, i) => (
-                      <span key={i} className="badge badge-amber" style={{ fontSize: '10px' }}>
+                      <span key={i} className="badge badge-primary" style={{ fontSize: '10.5px' }}>
                         {c}
                       </span>
                     ))}
@@ -240,10 +265,10 @@ export default function CueCardsView({ cueCards, onAddCueCard, onUpdateCueCard, 
 
               {card.band9_model_answer && (
                 <details style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
-                  <summary style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--secondary)', fontWeight: 600 }}>
+                  <summary style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--primary-dark)', fontWeight: 600 }}>
                     Preview Band 9.0 Model Answer
                   </summary>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.6', maxHeight: '140px', overflowY: 'auto' }}>
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.6', maxHeight: '140px', overflowY: 'auto' }}>
                     {card.band9_model_answer}
                   </p>
                 </details>

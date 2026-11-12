@@ -77,24 +77,18 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              color: AppColors.orangeSoft,
+              color: AppColors.primarySoft,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.timer_outlined, color: AppColors.orange, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Discussion Time',
-                        style: AppTextStyles.label.copyWith(color: AppColors.orange),
-                      ),
-                    ],
+                  Text(
+                    'DISCUSSION TIME',
+                    style: AppTextStyles.label.copyWith(color: AppColors.primaryDark),
                   ),
                   Text(
                     _formatDuration(_elapsedSeconds),
                     style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.orange,
+                      color: AppColors.primaryDark,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -106,22 +100,15 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
+                  color: AppColors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: AppColors.primary, size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Answer each question with extended, analytical responses. Aim for 30-60 seconds per answer.',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryDark),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Answer with extended, analytical responses (30–60 seconds each).',
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 ),
               ),
             ),
@@ -186,17 +173,16 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
                         ),
                       )
                     else
-                      ElevatedButton.icon(
+                      ElevatedButton(
                         onPressed: () {
                           _stopTimer();
                           Navigator.pop(context);
                         },
-                        icon: const Icon(Icons.check_circle, size: 18),
-                        label: const Text('Finish'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.teal,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                         ),
+                        child: const Text('Finish'),
                       ),
                   ],
                 ),
@@ -295,15 +281,8 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.orange, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.orange.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.primary, width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,12 +291,12 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.orangeSoft,
+                color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'QUESTION ${index + 1} OF ${widget.cueCard.part3FollowUps.length}',
-                style: AppTextStyles.label.copyWith(color: AppColors.orange, fontSize: 10),
+                style: AppTextStyles.label.copyWith(color: AppColors.primaryDark, fontSize: 10),
               ),
             ),
             const SizedBox(height: 12),
@@ -331,21 +310,19 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
 
             // Strategy tips
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.tealSoft,
+                color: AppColors.backgroundSecondary,
                 borderRadius: BorderRadius.circular(12),
+                border: const Border(
+                  left: BorderSide(color: AppColors.primary, width: 3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.lightbulb_outline, color: AppColors.teal, size: 18),
-                      const SizedBox(width: 8),
-                      Text('Strategy Tip', style: AppTextStyles.label.copyWith(color: AppColors.teal)),
-                    ],
-                  ),
+                  Text('STRATEGY TIP', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontSize: 10.5)),
                   const SizedBox(height: 6),
                   Text(
                     _getStrategyTip(index),
@@ -360,7 +337,7 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
             QuestionAudioRecorderWidget(
               key: ValueKey('part3_q_$index'),
               questionId: 'part3_q_$index',
-              label: 'Muhokama savoliga javob yozish (Q${index + 1})',
+              label: 'Record answer to question ${index + 1}',
             ),
             const SizedBox(height: 14),
 
@@ -376,25 +353,16 @@ class _Part3DiscussionPageState extends State<Part3DiscussionPage> {
                 });
               },
               child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isRevealed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isRevealed ? 'Hide answer approach' : 'Show answer approach',
-                      style: AppTextStyles.label.copyWith(color: AppColors.primary),
-                    ),
-                  ],
+                child: Text(
+                  isRevealed ? 'Hide answer approach' : 'Show answer approach',
+                  style: AppTextStyles.label.copyWith(color: AppColors.primaryDark),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),

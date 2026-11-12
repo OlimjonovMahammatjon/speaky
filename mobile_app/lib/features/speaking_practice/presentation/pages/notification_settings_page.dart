@@ -160,42 +160,22 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: AppColors.primaryCard,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.notifications_active_rounded,
-                              color: Colors.white,
-                              size: 26,
-                            ),
+                          Text(
+                            'Stay on Track',
+                            style: AppTextStyles.h3.copyWith(color: Colors.white),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Stay on Track',
-                                  style: AppTextStyles.h3.copyWith(color: Colors.white),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Get daily reminders to keep your speaking practice streak alive.',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Get daily reminders to keep your speaking practice streak alive.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 13,
+                              height: 1.4,
                             ),
                           ),
                         ],
@@ -280,59 +260,38 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                     const SizedBox(height: 12),
 
                     _buildInfoCard(
-                      icon: Icons.alarm_rounded,
-                      iconColor: AppColors.primary,
-                      iconBg: AppColors.primarySoft,
                       title: 'Daily practice reminder',
                       desc: 'A friendly reminder at your chosen time to open the app and practice.',
                     ),
                     const SizedBox(height: 10),
                     _buildInfoCard(
-                      icon: Icons.mic_rounded,
-                      iconColor: AppColors.band5,
-                      iconBg: AppColors.band5.withValues(alpha: 0.1),
                       title: 'Recording saved',
-                      desc: 'Confirmation when your dictaphone recording is saved and ready to review.',
+                      desc: 'Confirmation when your voice recording is saved and ready to review.',
                     ),
                     const SizedBox(height: 10),
                     _buildInfoCard(
-                      icon: Icons.local_fire_department_rounded,
-                      iconColor: AppColors.orange,
-                      iconBg: AppColors.orangeSoft,
                       title: 'Streak milestone',
-                      desc: 'Celebrate when you hit a new practice streak milestone!',
+                      desc: 'Celebrate when you hit a new practice streak milestone.',
                     ),
                     const SizedBox(height: 10),
                     _buildInfoCard(
-                      icon: Icons.assignment_turned_in_rounded,
-                      iconColor: AppColors.teal,
-                      iconBg: AppColors.tealSoft,
                       title: 'Mock test completed',
                       desc: 'A summary notification with your estimated band score after each mock test.',
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // Privacy note
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: AppColors.backgroundSecondary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.lock_outline, size: 16, color: AppColors.textMuted),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'All notifications are local — they come from the app on your device. '
-                              'No data is sent to any server. You can disable them anytime.',
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'All notifications are local — they run on your device with no server tracking.',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
                     ),
 
@@ -345,42 +304,23 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   }
 
   Widget _buildInfoCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
     required String title,
     required String desc,
   }) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.surfaceBorderLight, width: 1.5),
+        border: Border.all(color: AppColors.surfaceBorder, width: 1),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.titleMedium),
-                const SizedBox(height: 2),
-                Text(desc, style: AppTextStyles.bodySmall, textAlign: TextAlign.start),
-              ],
-            ),
-          ),
+          Text(title, style: AppTextStyles.titleMedium),
+          const SizedBox(height: 2),
+          Text(desc, style: AppTextStyles.bodySmall),
         ],
       ),
     );
